@@ -1,0 +1,261 @@
+/* General Resets */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Roboto', sans-serif;
+  background-color: #2A2A2A;
+  color: #fff;
+}
+
+/* Main container for background styling */
+.container {
+  background: radial-gradient(
+      circle farthest-side at 0% 50%, 
+      #282828 23.5%, rgba(255, 170, 0, 0) 0
+  ) 21px 30px, 
+  radial-gradient(
+      circle farthest-side at 0% 50%, 
+      #2c3539 24%, rgba(240, 166, 17, 0) 0
+  ) 19px 30px, 
+  linear-gradient(
+      #282828 14%, rgba(240, 166, 17, 0) 0, rgba(240, 166, 17, 0) 85%, #282828 0
+  ) 0 0, 
+  linear-gradient(
+      150deg, #282828 24%, #2c3539 0, #2c3539 26%, rgba(240, 166, 17, 0) 0, rgba(240, 166, 17, 0) 74%, #2c3539 0, #2c3539 76%, #282828 0
+  ) 0 0, 
+  linear-gradient(
+      30deg, #282828 24%, #2c3539 0, #2c3539 26%, rgba(240, 166, 17, 0) 0, rgba(240, 166, 17, 0) 74%, #2c3539 0, #2c3539 76%, #282828 0
+  ) 0 0, 
+  linear-gradient(90deg, #2c3539 2%, #282828 0, #282828 98%, #2c3539 0%) 0 0 #282828;
+  background-size: 40px 60px;
+  padding-left: 80px;
+}
+
+.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Flexbox Layout for the App */
+.App {
+  display: flex;
+  flex-direction: column;
+  margin-left: 80px;
+}
+
+.content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start; /* Align items to the top */
+  height: 100%;
+  padding: 20px;
+  margin: 10px;
+}
+
+/* Combine Module Configurations for Shared Styles */
+.module-list,
+.module-metadata {
+  flex: 1;
+  margin: 0 10px;
+  padding: 15px;
+  border-radius: 10px;
+  background-color: #1d1d1d;
+  height: 600px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.module-list ul {
+  padding-left: 1rem;
+  list-style-type: none;
+}
+
+.module-list li ul {
+  padding-left: 1rem;
+}
+
+button {
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.swallow__icon {
+  width: 1rem; /* Adjusted size */
+  height: 1rem; /* Adjusted size */
+  top: -8px;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: transparent; /* Make background transparent */
+  border: none;
+  position: relative;
+}
+
+/* Remove blue color on hover */
+.swallow__icon:hover {
+  background-color: transparent; /* Ensures no color change on hover */
+}
+
+.swallow__icon span {
+  width: 1rem;
+  height: 0.4rem;
+  position: absolute;
+  transition: transform 0.3s cubic-bezier(.86, 0, .07, 1), transform-origin 0.3s cubic-bezier(.86, 0, .07, 1);
+}
+
+.swallow__icon span:before,
+.swallow__icon span:after {
+  content: "";
+  width: 0.5rem;
+  height: 0.125rem;
+  background-color: rgb(245, 245, 247);
+  position: absolute;
+  bottom: 0;
+  transition: transform 0.3s cubic-bezier(.86, 0, .07, 1), transform-origin 0.3s cubic-bezier(.86, 0, .07, 1);
+}
+
+.swallow__icon span:before {
+  right: 50%;
+  border-radius: 2px 0 0 2px;
+  transform-origin: 100% 100%;
+  transform: rotate(40deg);
+}
+
+.swallow__icon span:after {
+  left: 50%;
+  border-radius: 0 2px 2px 0;
+  transform-origin: 0 100%;
+  transform: rotate(-40deg);
+}
+
+/* Only transition when the button is clicked */
+.rotate span {
+  transform: translateY(-8px);
+}
+
+.rotate span:before {
+  transform-origin: 100% 0;
+  transform: rotate(-40deg);
+}
+
+.rotate span:after {
+  transform-origin: 0 0;
+  transform: rotate(40deg);
+}
+
+/* Ensure sublists expand vertically */
+.module-list ul li ul {
+  display: block;
+}
+
+.module-content {
+  display: none; /* Hidden by default */
+  padding: 10px;
+  background-color: #2d2d2d;
+  color: #fff;
+}
+
+.module-configuration {
+  flex: 1;
+  margin: 0 10px;
+  padding: 15px;
+  border-radius: 10px;
+  background-color: #1d1d1d;
+  height: 600px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+/* Specific to module-list */
+.module-list {
+  width: 250px; /* Fixed width for toolbox */
+  overflow-y: auto;
+}
+
+/* Styling Scrollbars */
+.module-list::-webkit-scrollbar, 
+.metadata-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.module-list::-webkit-scrollbar-track,
+.metadata-container::-webkit-scrollbar-track {
+  background: #1d1d1d;
+  border-radius: 10px;
+}
+
+.module-list::-webkit-scrollbar-thumb,
+.metadata-container::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 10px;
+}
+
+.module-list::-webkit-scrollbar-thumb:hover,
+.metadata-container::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* Metadata container */
+.metadata-container {
+  max-width: 600px;
+  max-height: 450px;
+  overflow-y: auto;
+}
+
+/* Shared Label and Form Elements */
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  margin: 10px 0;
+}
+
+button {
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* Typography */
+h3 {
+  margin-top: 0;
+  color: #ffffff;
+}
+
+/* List Styles */
+ul {
+  padding-left: 20px;
+  list-style-type: none;
+}
+
+li {
+  padding: 8px;
+  cursor: pointer;
+  color: white;
+  text-align: left;
+}
+
+li.selected {
+  background-color: #555;
+  color: white;
+}
+
+/* Normal weight label */
+.normal-weight-label {
+  font-weight: normal;
+}
