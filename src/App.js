@@ -4,29 +4,40 @@ import './App.css';
 import './ModuleConfiguration.css';
 import Navbar from './NavBar';
 import { moduleConfig } from './moduleConfig';
+import ModuleEditor from './components/ModuleEditor';
+import { getStructure } from './components/services/githubService';
 
 const App = () => {
   const [selectedModule, setSelectedModule] = useState(null);
   const [expandedIndexes, setExpandedIndexes] = useState([]);
+  const [selectedView, setSelectedView] = useState('build');
+  const [structure, setStructure] = useState(null);
 
-  const algorithmTypes = ['Grouping-based', 'Differential Privacy', 'Data Synthesis'];
+  useEffect(() => {
+    const fetchStructure = async () => {
+      const { structure, sha } = await getStructure();
+      setStructure(structure); // Save structure to state
+    };
 
-  const modules = [
-    ['k-anonymity', 'l-diversity', 't-closeness'],
-    ['Noise Injection Mechanisms', 'Differentially Private Queries'],
-    ['CTGAN Synthesis', 'Gaussian Copula', 'TVAE Synthesis']
-  ];
+    fetchStructure(); // Call the async function
+  }, []);
 
-  const subModules = {
-    'k-anonymity':['k-anonymity'],
-    'l-diversity':['l-diversity'],
-    't-closeness':['t-closeness'],
-    'Noise Injection Mechanisms': ['Laplace Mechanism', 'Exponential Mechanism', 'Gaussian Mechanism'],
-    'Differentially Private Queries': ['Differentially Private Queries using Laplace', 'Differentially Private Queries using Exponential'],
-    'CTGAN Synthesis':['CTGAN Synthesis'],
-    'Gaussian Copula':['Gaussian Copula'],
-    'TVAE Synthesis':['TVAE Synthesis']
-  };
+  // Extract the algorithm types (top-level keys)
+  const algorithmTypes = structure ? Object.keys(structure) : [];
+
+  // Extract the modules only if structure is defined
+  const modules = structure ? Object.values(structure).map(obj => Object.keys(obj)) : [];
+
+  // Extract the subModules only if structure is defined
+  const subModules = structure
+    ? Object.keys(structure).reduce((acc, algorithm) => {
+      const algorithmModules = structure[algorithm];
+      Object.keys(algorithmModules).forEach(module => {
+        acc[module] = algorithmModules[module];
+      });
+      return acc;
+    }, {})
+    : {};
 
   const toggleAccordion = (index) => {
     if (expandedIndexes.includes(index)) {
@@ -38,85 +49,89 @@ const App = () => {
 
   return (
     <div className="App" class="container">
-      <Navbar />
+      <Navbar setSelectedView={setSelectedView} />
       <div className='page-title'>
-        <h1><t/>Data Anonymization Toolbox</h1>
+        <h1><t />Data Anonymization Toolbox</h1>
       </div>
       <div className='content'>
-        <div className="module-list">
-          <h2>Toolbox</h2>
-          <ul>
-            {algorithmTypes.map((type, index) => (
-              <li key={type}>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <strong onClick={() => toggleAccordion(index)} style={{ cursor: 'pointer', marginRight: '0.5rem' }}>
-                    {type}
-                  </strong>
-                  <button className={`swallow__icon ${expandedIndexes.includes(index) ? 'rotate' : ''}`} onClick={() => toggleAccordion(index)}>
-                    <span></span>
-                  </button>
-                </div>
-                {expandedIndexes.includes(index) && (
-                  <ul>
-                    {modules[index].map((module) => (
-                      <li key={module}>
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                          <strong onClick={() => toggleAccordion(module)} style={{ cursor: 'pointer', marginRight: '0.5rem' }}>
-                            {module}
-                          </strong>
-                          <button className={`swallow__icon ${expandedIndexes.includes(module) ? 'rotate' : ''}`} onClick={() => toggleAccordion(module)}>
-                            <span></span>
-                          </button>
-                        </div>
-                        {expandedIndexes.includes(module) && (
-                          <ul>
-                            {subModules[module].map((subModule) => (
-                              <li
-                                key={subModule}
-                                className={selectedModule === subModule ? 'selected' : ''}
-                                onClick={() => setSelectedModule(subModule)}
-                              >
-                                {subModule}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
+        {selectedView === 'build' && (
+          <>
+            <div className="module-list">
+              <h2>Toolbox</h2>
+              <ul>
+                {algorithmTypes.map((type, index) => (
+                  <li key={type}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <strong onClick={() => toggleAccordion(index)} style={{ cursor: 'pointer', marginRight: '0.5rem' }}>
+                        {type}
+                      </strong>
+                      <button className={`swallow__icon ${expandedIndexes.includes(index) ? 'rotate' : ''}`} onClick={() => toggleAccordion(index)}>
+                        <span></span>
+                      </button>
+                    </div>
+                    {expandedIndexes.includes(index) && (
+                      <ul>
+                        {modules[index].map((module) => (
+                          <li key={module}>
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                              <strong onClick={() => toggleAccordion(module)} style={{ cursor: 'pointer', marginRight: '0.5rem' }}>
+                                {module}
+                              </strong>
+                              <button className={`swallow__icon ${expandedIndexes.includes(module) ? 'rotate' : ''}`} onClick={() => toggleAccordion(module)}>
+                                <span></span>
+                              </button>
+                            </div>
+                            {expandedIndexes.includes(module) && (
+                              <ul>
+                                {subModules[module].map((subModule) => (
+                                  <li
+                                    key={subModule}
+                                    className={selectedModule === subModule ? 'selected' : ''}
+                                    onClick={() => setSelectedModule(subModule)}
+                                  >
+                                    {subModule}
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-        <div className='import-data'>
-          {/* Add your import data logic here */}
-        </div>
+            <div className={`module-configuration ${selectedModule ? '' : 'disabled'}`}>
+              <h2>
+                Configuration {selectedModule ? ` for ${selectedModule}` : ''}
+              </h2>
+              {selectedModule ? (
+                <ModuleConfiguration module={selectedModule} />
+              ) : (
+                <p>Select a module to configure.</p>
+              )}
+            </div>
 
-        <div className='export-data'>
-          {/* Add your export data logic here */}
-        </div>
+            <div className={`module-metadata ${selectedModule ? '' : 'disabled'}`}>
+              <h2>Module Metadata</h2>
+              {selectedModule ? (
+                <ModuleMetadata module={selectedModule} />
+              ) : (
+                <p>Select a module to see its metadata.</p>
+              )}
+            </div>
+          </>
+        )}
 
-        <div className={`module-configuration ${selectedModule ? '' : 'disabled'}`}>
-          <h2>
-            Configuration {selectedModule ? ` for ${selectedModule}` : ''}
-          </h2>
-          {selectedModule ? (
-            <ModuleConfiguration module={selectedModule} />
-          ) : (
-            <p>Select a module to configure.</p>
-          )}
-        </div>
+        {selectedView === 'code' && (
+          <div className='module-editor'>
+            <ModuleEditor />
+          </div>
+        )}
 
-        <div className={`module-metadata ${selectedModule ? '' : 'disabled'}`}>
-          <h2>Module Metadata</h2>
-          {selectedModule ? (
-            <ModuleMetadata module={selectedModule} />
-          ) : (
-            <p>Select a module to see its metadata.</p>
-          )}
-        </div>
+
       </div>
     </div>
   );
@@ -198,29 +213,29 @@ const parameterLabels = {
     param3: 'k',
     param4: 'Column 2'
   },
-  'CTGAN Synthesis':{
+  'CTGAN Synthesis': {
     param1: 'Columns to be anonymized',
     param2: 'Direct Identifier Columns'
   },
-  'Gaussian Copula':{
+  'Gaussian Copula': {
     param1: 'Columns to be anonymized',
     param2: 'Direct Identifier Columns'
   },
-  'TVAE Synthesis':{
+  'TVAE Synthesis': {
     param1: 'Columns to be anonymized',
     param2: 'Direct Identifier Columns'
   }
 };
 
 const queryOptions = {
-  'Differentially Private Queries using Laplace': ['sum', 'count', 'mean','median','mode','variance','std_dev','All Queries'],
-  'Differentially Private Queries using Exponential': ['frequency','mode','entropy','contingency', 'top-k','All Queries'],
+  'Differentially Private Queries using Laplace': ['sum', 'count', 'mean', 'median', 'mode', 'variance', 'std_dev', 'All Queries'],
+  'Differentially Private Queries using Exponential': ['frequency', 'mode', 'entropy', 'contingency', 'top-k', 'All Queries'],
 };
 
 const ModuleConfiguration = ({ module, selectedModule }) => {
   const [files, setFiles] = useState({});
   const [selectedQueryType, setSelectedQueryType] = useState('');
-  const [error, setError] = useState(null); 
+  const [error, setError] = useState(null);
   const [formValues, setFormValues] = useState({}); // Bind input fields to state
   const fileInputRef = useRef(null);
 
@@ -250,7 +265,7 @@ const ModuleConfiguration = ({ module, selectedModule }) => {
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
-  
+
     // Validate if the file is a CSV
     if (selectedFile && selectedFile.type !== 'text/csv') {
       setError('Please upload a valid CSV file'); // Set error message
@@ -266,7 +281,7 @@ const ModuleConfiguration = ({ module, selectedModule }) => {
       setError(null); // Clear error if valid CSV is uploaded
     }
   };
-  
+
   const handleFileUploadClick = () => {
     fileInputRef.current.click();
   };
@@ -277,23 +292,23 @@ const ModuleConfiguration = ({ module, selectedModule }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     const file = files[module]; // Get the uploaded file
     if (!file) {
       alert('Please select a file first.');
       return;
     }
-  
+
     const baseUrl = moduleConfig[module];
     if (!baseUrl) {
       alert(`No API URL found for module: ${module}`);
       return;
     }
-  
+
     const labels = parameterLabels[module]; // Fetch the parameter labels for the selected module
     const formData = new FormData();
     formData.append('file', file);  // Append the file
-  
+
     // Dynamically append the parameters based on the module and formValues
     Object.keys(labels).forEach((key) => {
       const inputValue = formValues[key]; // Get the corresponding value from formValues
@@ -301,16 +316,16 @@ const ModuleConfiguration = ({ module, selectedModule }) => {
         formData.append(labels[key], inputValue); // Append using the correct label as key
       }
     });
-  
+
     try {
       const response = await axios.post(`${baseUrl}/${selectedQueryType.toLowerCase()}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-  
+
       alert(`Query Result: ${JSON.stringify(response.data)}`);
-  
+
     } catch (error) {
       console.error('Error uploading file:', error.response?.data || error.message);
       alert(`Error: ${error.response?.data?.error || error.message}`);
@@ -324,7 +339,7 @@ const ModuleConfiguration = ({ module, selectedModule }) => {
     <div className="module-configuration">
       <form onSubmit={handleSubmit} className="form-content">
         <div className="file-upload">
-          <div className="center"> 
+          <div className="center">
             <button type="button" onClick={handleFileUploadClick} className="import-button">
               <svg
                 fill="#fff"
@@ -373,14 +388,14 @@ const ModuleConfiguration = ({ module, selectedModule }) => {
           </div>
           <div class="error__title">Please upload a valid CSV file.</div>
           <div class="error__close" onClick={() => setError(null)}><svg xmlns="http://www.w3.org/2000/svg" width="20" viewBox="0 0 20 20" height="20"><path fill="#393a37" d="m15.8333 5.34166-1.175-1.175-4.6583 4.65834-4.65833-4.65834-1.175 1.175 4.65833 4.65834-4.65833 4.6583 1.175 1.175 4.65833-4.6583 4.6583 4.6583 1.175-1.175-4.6583-4.6583z"></path></svg>
-        </div>
+          </div>
         </div>}
         <table>
           {labels.param1 && (
             <tr>
               <td align="left">{labels.param1}</td>
               <td align="right">
-                <input type="text" name="param1" className="input-field" value={formValues["param1"] || ''} onChange={handleInputChange}/>
+                <input type="text" name="param1" className="input-field" value={formValues["param1"] || ''} onChange={handleInputChange} />
               </td>
             </tr>
           )}
@@ -388,7 +403,7 @@ const ModuleConfiguration = ({ module, selectedModule }) => {
             <tr>
               <td align="left">{labels.param2}</td>
               <td align="right">
-                <input type="text" name="param2" className="input-field" value={formValues["param2"] || ''} onChange={handleInputChange}/>
+                <input type="text" name="param2" className="input-field" value={formValues["param2"] || ''} onChange={handleInputChange} />
               </td>
             </tr>
           )}
@@ -396,7 +411,7 @@ const ModuleConfiguration = ({ module, selectedModule }) => {
             <tr>
               <td align="left">{labels.param3}</td>
               <td align="right">
-                <input type="text" name="param3" className="input-field" value={formValues["param3"] || ''} onChange={handleInputChange}/>
+                <input type="text" name="param3" className="input-field" value={formValues["param3"] || ''} onChange={handleInputChange} />
               </td>
             </tr>
           )}
@@ -404,7 +419,7 @@ const ModuleConfiguration = ({ module, selectedModule }) => {
             <tr>
               <td align="left">{labels.param4}</td>
               <td align="right">
-                <input type="text" name="param4" className="input-field" value={formValues["param4"] || ''} onChange={handleInputChange}/>
+                <input type="text" name="param4" className="input-field" value={formValues["param4"] || ''} onChange={handleInputChange} />
               </td>
             </tr>
           )}
@@ -493,38 +508,38 @@ const ModuleMetadata = ({ module }) => {
 
   return (
     <div className="metadata-container">
-  <h3 className="metadata-title">Metadata for {module}</h3>
-  {metadata ? (
-    <div className="metadata-content">
-      <p className="metadata-section"><strong>Conceptual Explanation:</strong> {metadata.conceptual_Explanation}</p>
-      <p className="metadata-section"><strong>Technical Explanation:</strong> {metadata.technical_Explanation}</p>
-      <p className="metadata-section"><strong>Inputs:</strong></p>
-      {metadata.inputs && Object.entries(metadata.inputs).map(([paramName, param]) => (
-        <p key={paramName} className="metadata-section">
-          <strong>{paramName}:</strong> {param.description || 'No description available'} <br />
-          <strong>Type:</strong> {param.type || 'Unknown'}<br />
-          {param.options ? (
-            <>
-              <strong>Options:</strong>
-              <ul>
-                {param.options.map(option => (
-                  <li key={option.value}>
-                    <strong>{option.value}</strong>: {option.explanation}
-                  </li>
-                ))}
-              </ul>
-            </>
-          ) : null}
-        </p>
-      ))}
-      <p className="metadata-section"><strong>Application Platform:</strong> {metadata.application_Platform}</p>
-      <p className="metadata-section"><strong>Deployable Module:</strong>{metadata.deployable_Module}</p>
-      <p className="metadata-section"><strong>Incremental Updates:</strong> {metadata.incremental_Updates}</p>
+      <h3 className="metadata-title">Metadata for {module}</h3>
+      {metadata ? (
+        <div className="metadata-content">
+          <p className="metadata-section"><strong>Conceptual Explanation:</strong> {metadata.conceptual_Explanation}</p>
+          <p className="metadata-section"><strong>Technical Explanation:</strong> {metadata.technical_Explanation}</p>
+          <p className="metadata-section"><strong>Inputs:</strong></p>
+          {metadata.inputs && Object.entries(metadata.inputs).map(([paramName, param]) => (
+            <p key={paramName} className="metadata-section">
+              <strong>{paramName}:</strong> {param.description || 'No description available'} <br />
+              <strong>Type:</strong> {param.type || 'Unknown'}<br />
+              {param.options ? (
+                <>
+                  <strong>Options:</strong>
+                  <ul>
+                    {param.options.map(option => (
+                      <li key={option.value}>
+                        <strong>{option.value}</strong>: {option.explanation}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : null}
+            </p>
+          ))}
+          <p className="metadata-section"><strong>Application Platform:</strong> {metadata.application_Platform}</p>
+          <p className="metadata-section"><strong>Deployable Module:</strong>{metadata.deployable_Module}</p>
+          <p className="metadata-section"><strong>Incremental Updates:</strong> {metadata.incremental_Updates}</p>
+        </div>
+      ) : (
+        <p>No metadata available.</p>
+      )}
     </div>
-  ) : (
-    <p>No metadata available.</p>
-  )}
-</div>
   );
 };
 
