@@ -27,15 +27,17 @@ const App = () => {
   const algorithmTypes = structure ? Object.keys(structure) : [];
 
   // Extract the modules only if structure is defined
-  const modules = structure ? Object.values(structure).map(obj => Object.keys(obj)) : [];
+  const modules = structure
+    ? Object.values(structure).map(obj => Object.keys(obj || {}))
+    : [];
 
   // Extract the subModules only if structure is defined
   const subModules = structure
-    ? Object.keys(structure).reduce((acc, algorithm) => {
-      const algorithmModules = structure[algorithm];
-      Object.keys(algorithmModules).forEach(module => {
-        acc[module] = algorithmModules[module];
-      });
+    ? Object.entries(structure).reduce((acc, [category, modules]) => {
+      acc[category] = Object.entries(modules).reduce((subAcc, [moduleName, subModuleData]) => {
+        subAcc[moduleName] = Object.keys(subModuleData);
+        return subAcc;
+      }, {});
       return acc;
     }, {})
     : {};
@@ -47,6 +49,8 @@ const App = () => {
       setExpandedIndexes([...expandedIndexes, index]);
     }
   };
+
+
 
   return (
     <div className="App" class="container">
@@ -84,15 +88,25 @@ const App = () => {
                             </div>
                             {expandedIndexes.includes(module) && (
                               <ul>
-                                {subModules[module].map((subModule) => (
-                                  <li
-                                    key={subModule}
-                                    className={selectedModule === subModule ? 'selected' : ''}
-                                    onClick={() => setSelectedModule(subModule)}
-                                  >
-                                    {subModule}
-                                  </li>
-                                ))}
+                                {subModules[type] && subModules[type][module] ? (
+                                  Array.isArray(subModules[type][module]) ? (
+                                    subModules[type][module].map((subModule) => (
+                                      <li
+                                        key={subModule}
+                                        className={selectedModule === subModule ? 'selected' : ''}
+                                        onClick={() => setSelectedModule(subModule)}
+                                      >
+                                        {subModule}
+                                      </li>
+                                    ))
+                                  ) : (
+                                    // If it's not an array, you can display a message or log an error
+                                    <li>No submodules available or format is incorrect</li>
+                                  )
+                                ) : (
+                                  <li>Module does not exist</li> // Fallback if the module itself doesn't exist
+                                )}
+
                               </ul>
                             )}
                           </li>
@@ -109,7 +123,7 @@ const App = () => {
                 Configuration {selectedModule ? ` for ${selectedModule}` : ''}
               </h2>
               {selectedModule ? (
-                <ModuleConfiguration module={selectedModule} />
+                <ModuleConfiguration module={selectedModule} structure={structure} />
               ) : (
                 <p>Select a module to configure.</p>
               )}
@@ -165,74 +179,120 @@ const FileUploader = ({ handleFile }) => {
   );
 }
 
-const parameterLabels = {
-  'l-diversity': {
-    param1: { label: 'Column to be anonymized', optional: false },
-    param2: { label: 'Direct Identifier Columns', optional: false },
-    param3: { label: 'l', optional: false },
-    param4: { label: 'k', optional: false },
-  },
-  'k-anonymity': {
-    param1: { label: 'Column to be anonymized', optional: false },
-    param2: { label: 'Direct Identifier Columns', optional: false },
-    param3: { label: 'k', optional: false },
-  },
-  't-closeness': {
-    param1: { label: 'Column to be anonymized', optional: false },
-    param2: { label: 'Direct Identifier Columns', optional: false },
-    param3: { label: 't', optional: false },
-    param4: { label: 'k', optional: false },
-  },
-  'Laplace Mechanism': {
-    param1: { label: 'Column to be anonymized', optional: false },
-    param2: { label: 'Direct Identifier Columns', optional: false },
-    param3: { label: 'Sensitivity', optional: false },
-    param4: { label: 'Epsilon', optional: false }
-  },
-  'Exponential Mechanism': {
-    param1: { label: 'Column to be anonymized', optional: false },
-    param2: { label: 'Direct Identifier Columns', optional: false },
-    param3: { label: 'Sensitivity', optional: false },
-    param4: { label: 'Epsilon', optional: false }
-  },
-  'Gaussian Mechanism': {
-    param1: { label: 'Column to be anonymized', optional: false },
-    param2: { label: 'Direct Identifier Columns', optional: false },
-    param3: { label: 'Sensitivity', optional: false },
-    param4: { label: 'Epsilon', optional: false },
-    param5: { label: 'Delta', optional: false }
-  },
-  'Differentially Private Queries using Laplace': {
-    param1: { label: 'Column to be anonymized', optional: false },
-    param2: { label: 'Condition Value', optional: false },
-    param3: { label: 'Epsilon', optional: false }
-  },
-  'Differentially Private Queries using Exponential': {
-    param1: { label: 'Column to be anonymized', optional: false },
-    param2: { label: 'Epsilon', optional: false },
-    param3: { label: 'k', optional: true }, // Optional
-    param4: { label: 'Column 2', optional: true } // Optional
-  },
-  'CTGAN Synthesis':{
-    param1: { label: 'Columns to be anonymized', optional: false },
-    param2: { label: 'Direct Identifier Columns', optional: false }
-  },
-  'Gaussian Copula':{
-    param1: { label: 'Columns to be anonymized', optional: false },
-    param2: { label: 'Direct Identifier Columns', optional: false }
-  },
-  'TVAE Synthesis':{
-    param1: { label: 'Columns to be anonymized', optional: false },
-    param2: { label: 'Direct Identifier Columns', optional: false }
-  }
+const useStructureData = (structure) => {
+  const [parameterLabels, setParameterLabels] = useState({});
+  const [queryOptions, setQueryOptions] = useState({});
+
+  useEffect(() => {
+    // Fetch the structure.json file from GitHub
+    const fetchStructure = async () => {
+      try {
+        const paramLabels = {};
+        const queryOpts = {};
+
+        // Function to traverse the structure and populate paramLabels and queryOpts
+        const traverseStructure = (obj) => {
+          for (const key in obj) {
+            if (typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+              if (obj[key].param1) {
+                // Populate parameterLabels
+                paramLabels[key] = { ...obj[key] };
+              }
+              if (obj[key].queryOptions) {
+                // Populate queryOptions
+                queryOpts[key] = [...obj[key].queryOptions];
+              }
+              traverseStructure(obj[key]); // Recursive call to traverse further
+            }
+          }
+        };
+
+        // Start traversal from the root of the structure
+        traverseStructure(structure);
+
+        // Update the state
+        setParameterLabels(paramLabels);
+        setQueryOptions(queryOpts);
+      } catch (error) {
+        console.error('Error fetching structure.json:', error);
+      }
+    };
+
+    fetchStructure();
+  }, []);
+
+  return { parameterLabels, queryOptions };
 };
 
-const queryOptions = {
-  'Differentially Private Queries using Laplace': ['sum', 'count', 'mean', 'median', 'mode', 'variance', 'std_dev', 'All Queries'],
-  'Differentially Private Queries using Exponential': ['frequency', 'mode', 'entropy', 'contingency', 'top-k', 'All Queries'],
-};
 
-const ModuleConfiguration = ({ module, selectedModule }) => {
+// const parameterLabels = {
+//   'l-diversity': {
+//     param1: { label: 'Column to be anonymized', optional: false },
+//     param2: { label: 'Direct Identifier Columns', optional: false },
+//     param3: { label: 'l', optional: false },
+//     param4: { label: 'k', optional: false },
+//   },
+//   'k-anonymity': {
+//     param1: { label: 'Column to be anonymized', optional: false },
+//     param2: { label: 'Direct Identifier Columns', optional: false },
+//     param3: { label: 'k', optional: false },
+//   },
+//   't-closeness': {
+//     param1: { label: 'Column to be anonymized', optional: false },
+//     param2: { label: 'Direct Identifier Columns', optional: false },
+//     param3: { label: 't', optional: false },
+//     param4: { label: 'k', optional: false },
+//   },
+//   'Laplace Mechanism': {
+//     param1: { label: 'Column to be anonymized', optional: false },
+//     param2: { label: 'Direct Identifier Columns', optional: false },
+//     param3: { label: 'Sensitivity', optional: false },
+//     param4: { label: 'Epsilon', optional: false }
+//   },
+//   'Exponential Mechanism': {
+//     param1: { label: 'Column to be anonymized', optional: false },
+//     param2: { label: 'Direct Identifier Columns', optional: false },
+//     param3: { label: 'Sensitivity', optional: false },
+//     param4: { label: 'Epsilon', optional: false }
+//   },
+//   'Gaussian Mechanism': {
+//     param1: { label: 'Column to be anonymized', optional: false },
+//     param2: { label: 'Direct Identifier Columns', optional: false },
+//     param3: { label: 'Sensitivity', optional: false },
+//     param4: { label: 'Epsilon', optional: false },
+//     param5: { label: 'Delta', optional: false }
+//   },
+//   'Differentially Private Queries using Laplace': {
+//     param1: { label: 'Column to be anonymized', optional: false },
+//     param2: { label: 'Condition Value', optional: false },
+//     param3: { label: 'Epsilon', optional: false }
+//   },
+//   'Differentially Private Queries using Exponential': {
+//     param1: { label: 'Column to be anonymized', optional: false },
+//     param2: { label: 'Epsilon', optional: false },
+//     param3: { label: 'k', optional: true }, // Optional
+//     param4: { label: 'Column 2', optional: true } // Optional
+//   },
+//   'CTGAN Synthesis': {
+//     param1: { label: 'Columns to be anonymized', optional: false },
+//     param2: { label: 'Direct Identifier Columns', optional: false }
+//   },
+//   'Gaussian Copula': {
+//     param1: { label: 'Columns to be anonymized', optional: false },
+//     param2: { label: 'Direct Identifier Columns', optional: false }
+//   },
+//   'TVAE Synthesis': {
+//     param1: { label: 'Columns to be anonymized', optional: false },
+//     param2: { label: 'Direct Identifier Columns', optional: false }
+//   }
+// };
+
+// const queryOptions = {
+//   'Differentially Private Queries using Laplace': ['sum', 'count', 'mean', 'median', 'mode', 'variance', 'std_dev', 'All Queries'],
+//   'Differentially Private Queries using Exponential': ['frequency', 'mode', 'entropy', 'contingency', 'top-k', 'All Queries'],
+// };
+
+const ModuleConfiguration = ({ module, structure }) => {
   const [files, setFiles] = useState({});
   const [selectedQueryType, setSelectedQueryType] = useState('');
   const [error, setError] = useState(null);
@@ -243,6 +303,29 @@ const ModuleConfiguration = ({ module, selectedModule }) => {
   const [fileContent, setFileContent] = useState(null);
   const [queryResult, setQueryResult] = useState(null);
   const [isCsv, setIsCsv] = useState(false);
+
+  const { parameterLabels, queryOptions } = useStructureData(structure);
+
+  function removeQueryOptions(obj) {
+    // Check if the input is an object
+    if (typeof obj === 'object' && obj !== null) {
+      // Loop through the keys of the object
+      Object.keys(obj).forEach((key) => {
+        // If the key is 'queryOptions', delete it
+        if (key === 'queryOptions') {
+          delete obj[key];
+        } else {
+          // Recursively call the function for nested objects
+          removeQueryOptions(obj[key]);
+        }
+      });
+    }
+  }
+
+  removeQueryOptions(parameterLabels);
+
+  console.log('parameterLabels:', parameterLabels);
+  console.log('queryOptions:', queryOptions);
 
   // Effect to reset form on module change
   useEffect(() => {
@@ -318,7 +401,7 @@ const ModuleConfiguration = ({ module, selectedModule }) => {
       return;
     }
 
-    const labels = parameterLabels[module]; 
+    const labels = parameterLabels[module];
     const missingParams = [];
     Object.keys(labels).forEach((key) => {
       const { label: paramLabel, optional } = labels[key];
@@ -357,7 +440,7 @@ const ModuleConfiguration = ({ module, selectedModule }) => {
     for (let pair of formData.entries()) {
       console.log(`${pair[0]}: ${pair[1]}`);
     }
-  
+
     try {
       if (module.startsWith('Differentially Private Queries')) {
         let url = '';
@@ -495,7 +578,7 @@ const ModuleConfiguration = ({ module, selectedModule }) => {
           </div>
         </div>}
         <table>
-        {Object.keys(labels).map((key) => {
+          {Object.keys(labels).map((key) => {
             const { label, optional } = labels[key];
             return (
               <tr key={key}>
@@ -544,8 +627,8 @@ const ModuleConfiguration = ({ module, selectedModule }) => {
           <span class="label">Run Anonymization</span>
         </button>
       </form>
-      <SaveModal 
-        isOpen={isModalOpen} 
+      <SaveModal
+        isOpen={isModalOpen}
         onClose={() => setModalOpen(false)}
         onDownload={handleDownload}
         fileContent={fileContent}

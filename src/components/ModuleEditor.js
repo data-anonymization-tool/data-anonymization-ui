@@ -33,15 +33,17 @@ const ModuleEditor = () => {
     const algorithmTypes = structure ? Object.keys(structure) : [];
 
     // Extract the modules only if structure is defined
-    const moduleNames = structure ? Object.values(structure).map(obj => Object.keys(obj)) : [];
+    const moduleNames = structure
+        ? Object.values(structure).map(obj => Object.keys(obj || {}))
+        : [];
 
     // Extract the subModules only if structure is defined
     const subModules = structure
-        ? Object.keys(structure).reduce((acc, algorithm) => {
-            const algorithmModules = structure[algorithm];
-            Object.keys(algorithmModules).forEach(module => {
-                acc[module] = algorithmModules[module];
-            });
+        ? Object.entries(structure).reduce((acc, [category, modules]) => {
+            acc[category] = Object.entries(modules).reduce((subAcc, [moduleName, subModuleData]) => {
+                subAcc[moduleName] = Object.keys(subModuleData);
+                return subAcc;
+            }, {});
             return acc;
         }, {})
         : {};
@@ -148,15 +150,24 @@ const ModuleEditor = () => {
                                             </div>
                                             {expandedIndexes.includes(module) && (
                                                 <ul>
-                                                    {subModules[module].map((subModule) => (
-                                                        <li
-                                                            key={subModule}
-                                                            className={selectedModule === subModule ? 'selected' : ''}
-                                                            onClick={() => handleModuleClick(subModule)}
-                                                        >
-                                                            {subModule}
-                                                        </li>
-                                                    ))}
+                                                    {subModules[type] && subModules[type][module] ? (
+                                                        Array.isArray(subModules[type][module]) ? (
+                                                            subModules[type][module].map((subModule) => (
+                                                                <li
+                                                                    key={subModule}
+                                                                    className={selectedModule === subModule ? 'selected' : ''}
+                                                                    onClick={() => handleModuleClick(subModule)}
+                                                                >
+                                                                    {subModule}
+                                                                </li>
+                                                            ))
+                                                        ) : (
+                                                            // If it's not an array, you can display a message or log an error
+                                                            <li>No submodules available or format is incorrect</li>
+                                                        )
+                                                    ) : (
+                                                        <li>Module does not exist</li> // Fallback if the module itself doesn't exist
+                                                    )}
                                                 </ul>
                                             )}
                                         </li>
