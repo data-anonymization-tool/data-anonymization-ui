@@ -8,6 +8,28 @@
     overflow: hidden; 
 }
 
+.module-configuration-container {
+  overflow-y: auto;
+}
+
+.module-configuration-container::-webkit-scrollbar{
+  width: 8px;
+}
+
+.module-configuration-container::-webkit-scrollbar-track{
+  background: #1d1d1d;
+  border-radius: 10px;
+}
+
+.module-configuration-container::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 10px;
+}
+
+.module-configuration-container::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
 h3 {
     margin-top: 0;
     color: #ffffff;
@@ -23,7 +45,6 @@ h3 {
 .parameter-group {
     display: flex;               
     align-items: center;         
-    /* Set a bottom margin for consistent spacing between groups */
     margin-bottom: 20px; /* Use the same value as gap */
     width: 100%;
 }
@@ -232,6 +253,7 @@ label {
     background: #EF665B;
     border-radius: 8px;
     box-shadow: 0px 0px 5px -3px #111;
+    margin:auto;
   }
   
   .error__icon {
@@ -260,4 +282,67 @@ label {
   
   .error__close path {
     fill: #fff;
+  }
+
+  .savemodal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; 
+  }
+  
+  .savemodal-content {
+    background: #1d1d1d;
+    padding: 30px; /* Increased padding */
+    border-radius: 10px;
+    width: 400px;
+    max-width: 100%;
+    position: relative;
+    z-index: 1001;
+  }
+
+  .savemodal-close {
+      position: absolute;
+      top: 0px;  /*Slightly lowered */
+      right: 15px; /* Increased right space */
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-size: 18px;
+      color: white;
+  }
+
+  .savemodal-close:hover {
+      color: #ccc; /* Hover state */
+      transform: scale(1.1); /* Slight enlarge on hover */
+  }
+
+  .query-result {
+    border: 1px solid #ccc;
+    padding: 10px;
+    max-height: 300px;
+    overflow: auto;
+    color: white; 
+  }
+
+  .label-input {
+    display: flex;
+    align-items: center; /* Align vertically center */
+    margin-bottom: 20px; /* Space below */
+    margin-left: 80px;
+  }
+  
+  .label-input label {
+    margin-right: 10px; /* Space between label and input */
+    color: white; /* Ensure text color is visible */
+  }
+  
+  .label-input .input-field {
+    flex: 1; /* Allow input field to take the remaining space */
   }

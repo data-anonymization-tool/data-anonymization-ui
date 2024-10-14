@@ -3,6 +3,7 @@ import axios from 'axios';
 import './App.css';
 import './ModuleConfiguration.css';
 import Navbar from './NavBar';
+import SaveModal from './SaveModal';
 import { moduleConfig } from './moduleConfig';
 import ModuleEditor from './components/ModuleEditor';
 import { getStructure } from './components/services/githubService';
@@ -164,66 +165,65 @@ const FileUploader = ({ handleFile }) => {
   );
 }
 
-// Define parameter labels for each module
 const parameterLabels = {
   'l-diversity': {
-    param1: 'Column to be anonymized',
-    param2: 'Direct Identifier Columns',
-    param3: 'l',
-    param4: 'k',
+    param1: { label: 'Column to be anonymized', optional: false },
+    param2: { label: 'Direct Identifier Columns', optional: false },
+    param3: { label: 'l', optional: false },
+    param4: { label: 'k', optional: false },
   },
   'k-anonymity': {
-    param1: 'Column to be anonymized',
-    param2: 'Direct Identifier Columns',
-    param3: 'k',
+    param1: { label: 'Column to be anonymized', optional: false },
+    param2: { label: 'Direct Identifier Columns', optional: false },
+    param3: { label: 'k', optional: false },
   },
   't-closeness': {
-    param1: 'Column to be anonymized',
-    param2: 'Direct Identifier Columns',
-    param3: 't',
-    param4: 'k',
+    param1: { label: 'Column to be anonymized', optional: false },
+    param2: { label: 'Direct Identifier Columns', optional: false },
+    param3: { label: 't', optional: false },
+    param4: { label: 'k', optional: false },
   },
   'Laplace Mechanism': {
-    param1: 'Column to be anonymized',
-    param2: 'Direct Identifier Columns',
-    param3: 'Sensitivity',
-    param4: 'Epsilon'
+    param1: { label: 'Column to be anonymized', optional: false },
+    param2: { label: 'Direct Identifier Columns', optional: false },
+    param3: { label: 'Sensitivity', optional: false },
+    param4: { label: 'Epsilon', optional: false }
   },
   'Exponential Mechanism': {
-    param1: 'Column to be anonymized',
-    param2: 'Direct Identifier Columns',
-    param3: 'Sensitivity',
-    param4: 'Epsilon'
+    param1: { label: 'Column to be anonymized', optional: false },
+    param2: { label: 'Direct Identifier Columns', optional: false },
+    param3: { label: 'Sensitivity', optional: false },
+    param4: { label: 'Epsilon', optional: false }
   },
   'Gaussian Mechanism': {
-    param1: 'Column to be anonymized',
-    param2: 'Direct Identifier Columns',
-    param3: 'Sensitivity',
-    param4: 'Epsilon',
-    param5: 'Delta'
+    param1: { label: 'Column to be anonymized', optional: false },
+    param2: { label: 'Direct Identifier Columns', optional: false },
+    param3: { label: 'Sensitivity', optional: false },
+    param4: { label: 'Epsilon', optional: false },
+    param5: { label: 'Delta', optional: false }
   },
   'Differentially Private Queries using Laplace': {
-    param1: 'Column to be anonymized',
-    param2: 'Condition Value',
-    param3: 'Epsilon'
+    param1: { label: 'Column to be anonymized', optional: false },
+    param2: { label: 'Condition Value', optional: false },
+    param3: { label: 'Epsilon', optional: false }
   },
   'Differentially Private Queries using Exponential': {
-    param1: 'Column to be anonymized',
-    param2: 'Epsilon',
-    param3: 'k',
-    param4: 'Column 2'
+    param1: { label: 'Column to be anonymized', optional: false },
+    param2: { label: 'Epsilon', optional: false },
+    param3: { label: 'k', optional: true }, // Optional
+    param4: { label: 'Column 2', optional: true } // Optional
   },
-  'CTGAN Synthesis': {
-    param1: 'Columns to be anonymized',
-    param2: 'Direct Identifier Columns'
+  'CTGAN Synthesis':{
+    param1: { label: 'Columns to be anonymized', optional: false },
+    param2: { label: 'Direct Identifier Columns', optional: false }
   },
-  'Gaussian Copula': {
-    param1: 'Columns to be anonymized',
-    param2: 'Direct Identifier Columns'
+  'Gaussian Copula':{
+    param1: { label: 'Columns to be anonymized', optional: false },
+    param2: { label: 'Direct Identifier Columns', optional: false }
   },
-  'TVAE Synthesis': {
-    param1: 'Columns to be anonymized',
-    param2: 'Direct Identifier Columns'
+  'TVAE Synthesis':{
+    param1: { label: 'Columns to be anonymized', optional: false },
+    param2: { label: 'Direct Identifier Columns', optional: false }
   }
 };
 
@@ -238,6 +238,11 @@ const ModuleConfiguration = ({ module, selectedModule }) => {
   const [error, setError] = useState(null);
   const [formValues, setFormValues] = useState({}); // Bind input fields to state
   const fileInputRef = useRef(null);
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [filename, setFilename] = useState('');
+  const [fileContent, setFileContent] = useState(null);
+  const [queryResult, setQueryResult] = useState(null);
+  const [isCsv, setIsCsv] = useState(false);
 
   // Effect to reset form on module change
   useEffect(() => {
@@ -265,7 +270,10 @@ const ModuleConfiguration = ({ module, selectedModule }) => {
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
-
+    if (!selectedFile) {
+      setError('No file selected');  // Handle no file case
+      return;
+    }
     // Validate if the file is a CSV
     if (selectedFile && selectedFile.type !== 'text/csv') {
       setError('Please upload a valid CSV file'); // Set error message
@@ -280,6 +288,11 @@ const ModuleConfiguration = ({ module, selectedModule }) => {
       }));
       setError(null); // Clear error if valid CSV is uploaded
     }
+    const originalFilename = selectedFile.name;
+    setFormValues((prevValues) => ({
+      ...prevValues,
+      filename: originalFilename,  // Store the original filename
+    }));
   };
 
   const handleFileUploadClick = () => {
@@ -305,38 +318,129 @@ const ModuleConfiguration = ({ module, selectedModule }) => {
       return;
     }
 
-    const labels = parameterLabels[module]; // Fetch the parameter labels for the selected module
+    const labels = parameterLabels[module]; 
+    const missingParams = [];
+    Object.keys(labels).forEach((key) => {
+      const { label: paramLabel, optional } = labels[key];
+      const inputValue = formValues[key]; // Get the user input for this parameter
+
+      // Only check for missing parameters if they are not optional
+      if (!optional && !inputValue) {
+        missingParams.push(paramLabel); // Add to the list of missing parameters
+      }
+    });
+
+    if (queryTypeOptions.length > 0 && !selectedQueryType) {
+      missingParams.push("Query Type");
+    }
+
+    // If there are missing parameters, alert the user and prevent form submission
+    if (missingParams.length > 0) {
+      alert(`Please provide values for the following required parameters: ${missingParams.join(', ')}`);
+      return; // Stop form submission
+    }
     const formData = new FormData();
     formData.append('file', file);  // Append the file
 
     // Dynamically append the parameters based on the module and formValues
     Object.keys(labels).forEach((key) => {
-      const inputValue = formValues[key]; // Get the corresponding value from formValues
-      if (inputValue) {
-        formData.append(labels[key], inputValue); // Append using the correct label as key
+      if (formValues[key]) {
+        formData.append(labels[key].label, formValues[key]); // Use the label as the key
       }
     });
 
-    try {
-      const response = await axios.post(`${baseUrl}/${selectedQueryType.toLowerCase()}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      alert(`Query Result: ${JSON.stringify(response.data)}`);
-
-    } catch (error) {
-      console.error('Error uploading file:', error.response?.data || error.message);
-      alert(`Error: ${error.response?.data?.error || error.message}`);
+    if (queryTypeOptions.length > 0 && selectedQueryType) {
+      formData.append('query', selectedQueryType); // Append the selected query type
     }
+
+    console.log('FormData entries:');
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}: ${pair[1]}`);
+    }
+  
+    try {
+      if (module.startsWith('Differentially Private Queries')) {
+        let url = '';
+        if (selectedQueryType === 'All Queries') {
+          url = `${baseUrl}/`;
+        } else {
+          url = `${baseUrl}/${selectedQueryType.toLowerCase()}`;
+        }
+        const response = await axios.post(url, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        // alert(`Query Result: ${JSON.stringify(response.data)}`);\
+        setQueryResult(response.data);
+        const timestamp = new Date().toLocaleString('sv').replace(/[-: ]/g, '');
+        setFilename(`queryresult_${timestamp}_${formValues.filename.replace(/\.csv$/, '')}`)
+        setIsCsv(false);
+        setModalOpen(true);
+      } else {
+        // Handle file response for other mechanisms
+        const response = await axios.post(baseUrl, formData, {
+          responseType: 'blob', // Expecting a file response
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        // Store the file content for download and set the filename
+        setFileContent(response.data);
+        const timestamp = new Date().toLocaleString('sv').replace(/[-: ]/g, '');
+        setFilename(`anonymized_${timestamp}_${formValues.filename.replace(/\.csv$/, '')}`);
+        setIsCsv(true);
+        setModalOpen(true);
+
+        // const url = window.URL.createObjectURL(new Blob([response.data]));
+        // const link = document.createElement('a');
+        // link.href = url;
+        // link.setAttribute('download', filename); // Download filename
+        // document.body.appendChild(link);
+        // link.click();
+        // link.remove();
+        // window.URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      if (error.response && error.response.data && error.response.data.error) {
+        alert(`Error: ${error.response.data.error}`); // Show the specific error from Flask
+      } else {
+        alert(`Error: ${error.message}`); // Fallback for other errors
+      }
+    }
+  };
+
+  const handleDownload = (fileType) => {
+    if (fileType === 'csv') {
+      // Download the CSV file
+      const url = window.URL.createObjectURL(new Blob([fileContent], { type: 'text/csv' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);  // Use the edited filename
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } else if (fileType === 'json') {
+      // Download the JSON result
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(queryResult));
+      const link = document.createElement('a');
+      link.setAttribute('href', dataStr);
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Close the modal after downloading
+    setModalOpen(false);
   };
 
   const labels = parameterLabels[module] || {};
   const queryTypeOptions = queryOptions[module] || [];
 
   return (
-    <div className="module-configuration">
+    <div className="module-configuration-container">
       <form onSubmit={handleSubmit} className="form-content">
         <div className="file-upload">
           <div className="center">
@@ -391,38 +495,24 @@ const ModuleConfiguration = ({ module, selectedModule }) => {
           </div>
         </div>}
         <table>
-          {labels.param1 && (
-            <tr>
-              <td align="left">{labels.param1}</td>
-              <td align="right">
-                <input type="text" name="param1" className="input-field" value={formValues["param1"] || ''} onChange={handleInputChange} />
-              </td>
-            </tr>
-          )}
-          {labels.param2 && (
-            <tr>
-              <td align="left">{labels.param2}</td>
-              <td align="right">
-                <input type="text" name="param2" className="input-field" value={formValues["param2"] || ''} onChange={handleInputChange} />
-              </td>
-            </tr>
-          )}
-          {labels.param3 && (
-            <tr>
-              <td align="left">{labels.param3}</td>
-              <td align="right">
-                <input type="text" name="param3" className="input-field" value={formValues["param3"] || ''} onChange={handleInputChange} />
-              </td>
-            </tr>
-          )}
-          {labels.param4 && (
-            <tr>
-              <td align="left">{labels.param4}</td>
-              <td align="right">
-                <input type="text" name="param4" className="input-field" value={formValues["param4"] || ''} onChange={handleInputChange} />
-              </td>
-            </tr>
-          )}
+        {Object.keys(labels).map((key) => {
+            const { label, optional } = labels[key];
+            return (
+              <tr key={key}>
+                <td align="left">{label}</td>
+                <td align="right">
+                  <input
+                    type="text"
+                    name={key}
+                    className="input-field"
+                    value={formValues[key] || ''} // Bind to formValues dynamically
+                    onChange={handleInputChange}
+                    placeholder={optional ? '(Optional)' : ''}
+                  />
+                </td>
+              </tr>
+            );
+          })}
           {queryTypeOptions.length > 0 && (
             <tr>
               <td align="left">
@@ -454,6 +544,16 @@ const ModuleConfiguration = ({ module, selectedModule }) => {
           <span class="label">Run Anonymization</span>
         </button>
       </form>
+      <SaveModal 
+        isOpen={isModalOpen} 
+        onClose={() => setModalOpen(false)}
+        onDownload={handleDownload}
+        fileContent={fileContent}
+        filename={filename}
+        setFilename={setFilename}
+        queryResult={queryResult}
+        isCsv={isCsv}
+      />
     </div>
   );
 };
