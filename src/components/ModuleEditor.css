@@ -14,21 +14,30 @@
 }
 
 .editor button {
-    bottom: 20px;
-    right: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     padding: 10px 20px;
-    background-color: #007bff;
-    /* Optional: change to preferred button color */
-    color: white;
+    background-color: #0f357c; /* Blue background */
+    color: #ffffff;
     border: none;
-    border-radius: 5px;
+    border-radius: 0.5em;
     cursor: pointer;
+    gap: 8px;
+    transition: all 250ms;
 }
 
 .editor button:hover {
-    background-color: #0056b3;
-    /* Darken the button on hover */
+    background-color: #0e53d4;
 }
+
+.editor button:hover::before {
+    width: 100%; /* Expand width on hover */
+}
+
+.editor .ruler {
+    display: none;
+  }
 
 .custom-ace-editor .ace_gutter {
     background-color: #3c3d37;
@@ -47,18 +56,16 @@
     width: 900px;
 }
 
-.module-list {
+.toolbox-list {
     flex: 1;
     margin: 0 10px;
     padding: 15px;
     border-radius: 10px;
     background-color: #1d1d1d;
     height: 600px;
-    /* Fixed height */
+    width: 450px;
     box-sizing: border-box;
     text-align: center;
-    width: 250px;
-    /* Fixed width for toolbox */
     overflow-y: auto;
 }
 
@@ -135,4 +142,74 @@ body.modal-open {
 .disabled {
     opacity: 0.5;
     pointer-events: none;
+}
+
+.add-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #0f357c; /* Blue background */
+    color: #ffffff;
+    border: none;
+    border-radius: 0.5em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease; 
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+.plusIcon {
+    width: 14px; /* Reduced size of the plus icon */
+    height: 14px;
+    transition: transform 0.3s ease; /* Smooth rotation transition */
+}
+
+.add-button:hover {
+    background-color: #0e53d4;
+}
+
+.add-button:hover .plusIcon {
+    transform: rotate(180deg); /* Rotate the plus icon by 90 degrees on hover */
+}
+
+.toolbox-list::-webkit-scrollbar{
+  width: 8px;
+}
+
+.toolbox-list::-webkit-scrollbar-track{
+  background: #1d1d1d;
+  border-radius: 10px;
+}
+
+.toolbox-list::-webkit-scrollbar-thumb{
+  background: #555;
+  border-radius: 10px;
+}
+
+.toolbox-list::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+.custom-ace-editor .ace_print-margin {
+    display: none;
+}
+
+.custom-ace-editor {
+    scrollbar-width: thin; /* Make scrollbar thin */
+    scrollbar-color: #555 #333; /* thumb color and track color */
+}
+
+.custom-ace-editor .ace_marker-layer .ace_active-line {
+    background-color: #474747 !important; /* Change this to a darker gray */
+}
+
+.custom-ace-editor .ace_cursor {
+    color: white !important; /* Change cursor color to white */
+}
+
+.custom-ace-editor .ace_scrollbar,
+.custom-ace-editor .ace_gutter {
+    z-index: 0; /* Lower the z-index */
 }

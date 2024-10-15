@@ -89,10 +89,10 @@ const ModuleEditor = () => {
                 "Gaussian Copula": "gaussian-copula",
                 "TVAE Synthesis": "tvae-synthesis",
             }
-            module = mapping[module];
-            const codeData = await getModuleCode(module);
+            const mappedModule = mapping[module] || module;
+            const codeData = await getModuleCode(mappedModule);
             setCode(codeData);
-            setSelectedModule(module);
+            setSelectedModule(mappedModule);
         } catch (error) {
             console.error('Error fetching module code:', error);
         }
@@ -133,7 +133,7 @@ const ModuleEditor = () => {
 
     return (
         <div className='content'>
-            <div className="module-list">
+            <div className="toolbox-list">
                 <h2>Toolbox</h2>
                 <ul>
                     {algorithmTypes.map((type, index) => (
@@ -188,17 +188,14 @@ const ModuleEditor = () => {
                     ))}
                     <li onClick={openModal}>
                         <div className="add-module-container">
-                            <button class="add-module">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" class="svg-icon">
-                                    <g stroke-width="1.5" stroke-linecap="round" stroke="#ffffff">
-                                        <circle r="2.5" cy="10" cx="10"></circle>
-                                        <path fill-rule="evenodd" d="m8.39079 2.80235c.53842-1.51424 2.67991-1.51424 3.21831-.00001.3392.95358 1.4284 1.40477 2.3425.97027 1.4514-.68995 2.9657.82427 2.2758 2.27575-.4345.91407.0166 2.00334.9702 2.34248 1.5143.53842 1.5143 2.67996 0 3.21836-.9536.3391-1.4047 1.4284-.9702 2.3425.6899 1.4514-.8244 2.9656-2.2758 2.2757-.9141-.4345-2.0033.0167-2.3425.9703-.5384 1.5142-2.67989 1.5142-3.21831 0-.33914-.9536-1.4284-1.4048-2.34247-.9703-1.45148.6899-2.96571-.8243-2.27575-2.2757.43449-.9141-.01669-2.0034-.97028-2.3425-1.51422-.5384-1.51422-2.67994.00001-3.21836.95358-.33914 1.40476-1.42841.97027-2.34248-.68996-1.45148.82427-2.9657 2.27575-2.27575.91407.4345 2.00333-.01669 2.34247-.97026z" clip-rule="evenodd"></path>
-                                    </g>
-                                </svg>
-                                <span class="label">Add New Module</span>
-                                {/* Add Module Modal */}
-
-                            </button>
+                        <button className="add-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" className="plusIcon" viewBox="0 0 30 30">
+                                <g strokeWidth="1.5" strokeLinecap="round" stroke="#ffffff">
+                                    <path d="M13.75 23.75V16.25H6.25V13.75H13.75V6.25H16.25V13.75H23.75V16.25H16.25V23.75H13.75Z"></path>
+                                </g>
+                            </svg>
+                            <span className="label">Add New Module</span>
+                        </button>
                         </div>
                     </li>
 
@@ -222,9 +219,19 @@ const ModuleEditor = () => {
                                 useWorker: false, // Disable syntax checking
                             }}
                             className="custom-ace-editor"
+                            data-ace-show-print-margin="false"
+                            style={{
+                                width: '100%',   // Or any custom width like '500px'
+                                height: '480px', // Or any custom height
+                            }}
                         />
-                        <button onClick={handleSaveChanges}>
-                            Save Changes
+                        <button class="button" onClick={handleSaveChanges}>
+                        <svg viewBox="0 0 384 512" height="1em" xmlns="http://www.w3.org/2000/svg">
+                        <g strokeWidth="1.5" stroke="white" fill="white">
+                        <path d="M0 48C0 21.5 21.5 0 48 0l0 48V441.4l130.1-92.9c8.3-6 19.6-6 27.9 0L336 441.4V48H48V0H336c26.5 0 48 21.5 48 48V488c0 9-5 17.2-13 21.3s-17.6 3.4-24.9-1.8L192 397.5 37.9 507.5c-7.3 5.2-16.9 5.9-24.9 1.8S0 497 0 488V48z"></path>
+                        </g>
+                        </svg>
+                        <span>Save Changes</span>
                         </button>
                     </>
                 )}

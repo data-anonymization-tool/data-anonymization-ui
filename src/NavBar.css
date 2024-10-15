@@ -12,10 +12,11 @@
     align-items: center;
     justify-content: flex-start;
     z-index: 1000;
-    /* Ensure it stays on top */
 }
 
 .nav-icon {
+    position: relative; 
+    display: inline-block;
     padding: 20px;
     cursor: pointer;
 }
@@ -39,4 +40,31 @@
         'wght' 400,
         'GRAD' 0,
         'opsz' 24
+}
+
+.tooltip {
+    visibility: hidden;
+    background-color: black;
+    color: white;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 5px;
+
+    /* Position the tooltip */
+    position: absolute;
+    z-index: 1;
+    bottom: -50%; /* Place it above the icon */
+    left: 100%;
+    transform: translateX(-50%);
+    white-space: nowrap; 
+    
+    /* Fade in tooltip */
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+/* Show tooltip on hover */
+.nav-icon:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
 }

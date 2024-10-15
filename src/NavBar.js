@@ -8,11 +8,13 @@ const Navbar = ({ setSelectedView }) => {
                 <span className="material-symbols-outlined">
                     build
                 </span>
+                <div className="tooltip">Anonymize Data</div>
             </div>
             <div className="nav-icon" onClick={() => setSelectedView('code')}>
                 <span className="material-symbols-outlined">
                     code
                 </span>
+                <div className="tooltip">Code Editor</div> 
             </div>
         </div>
     );
