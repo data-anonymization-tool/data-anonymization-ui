@@ -141,10 +141,11 @@ const AddModuleModal = ({ isOpen, onRequestClose, onModuleCreated }) => {
             contentLabel="Add New Module"
             style={customStyles}
         >
-            <h2>Add New Module</h2>
+            <h2>Add a New Module</h2>
             <form onSubmit={handleSubmit} style={styles.form}>
                 {step === 1 && (
                     <div style={styles.formGroup}>
+                        Enter the name of the module you want to create, select the algorithm type and specify the module category. Ensure that all fields are filled out before proceeding to the next step.
                         <label>Module Name:</label>
                         <input
                             type="text"
@@ -175,6 +176,7 @@ const AddModuleModal = ({ isOpen, onRequestClose, onModuleCreated }) => {
 
                 {step === 2 && (
                     <div style={styles.formGroup}>
+                        Please enter the Python code for your anonymization modules using Flask APIs.
                         <label>{moduleName ? `${moduleName}.py` : 'module-name.py'}:</label>
                         <textarea
                             value={pythonCode}
@@ -191,6 +193,7 @@ const AddModuleModal = ({ isOpen, onRequestClose, onModuleCreated }) => {
 
                 {step === 3 && (
                     <div style={styles.formGroup}>
+                        Please fill in the metadata information explaining the following details regarding your anonymization module inside the double quotes provided.
                         <label>{moduleName ? `${moduleName}.json` : 'module-name.json'}:</label>
                         <textarea
                             value={jsonContent}
@@ -207,6 +210,7 @@ const AddModuleModal = ({ isOpen, onRequestClose, onModuleCreated }) => {
 
                 {step === 4 && (
                     <div style={styles.formGroup}>
+                        Provide the contents of the Dockerfile for your module. This file is essential for containerizing your application. Ensure that it is correctly set up to run your module properly.
                         <label>Dockerfile:</label>
                         <textarea
                             value={dockerfileContent}
@@ -223,6 +227,7 @@ const AddModuleModal = ({ isOpen, onRequestClose, onModuleCreated }) => {
 
                 {step === 5 && (
                     <div style={styles.formGroup}>
+                        Enter the Python dependencies for your module in the requirements.txt format. This list is crucial for the installation of necessary packages when deploying the module.
                         <label>requirements.txt:</label>
                         <textarea
                             value={requirementsContent}
@@ -251,10 +256,15 @@ const customStyles = {
         transform: 'translate(-50%, -50%)',
         width: '500px',
         height: '500px',
-        backgroundColor: '#2c2c2c'
+        backgroundColor: '#2c2c2c',
+        zIndex:'1001',
+        overflowY: 'auto', 
+        scrollbarWidth: 'thin', // For Firefox: make scrollbar thin
+        scrollbarColor: '#555 #1c1c1c', // For Firefox: scrollbar color
     },
     overlay: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',  // Dark overlay
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',  // Dark overlay
+        zIndex:'1000',
       }
 };
 
@@ -276,6 +286,10 @@ const styles = {
         marginBottom: '20px',
         width: '100%',
         boxSizing: 'border-box',
+        border: '1px solid #555',
+        borderradius: '4px',
+        backgroundColor: '#333',
+        color: '#e0e0e0',
     },
     textarea: {
         flexGrow: 1,
@@ -284,6 +298,13 @@ const styles = {
         width: '100%',
         boxSizing: 'border-box',
         height: '100%',
+        border: '1px solid #555',
+        borderradius: '4px',
+        backgroundColor: '#333',
+        color: '#e0e0e0',
+        overflowY: 'auto', // Enable vertical scrolling if needed
+        scrollbarWidth: 'thin', // For Firefox: make scrollbar thin
+        scrollbarColor: '#555 #1c1c1c', // For Firefox: scrollbar color
     },
     buttonGroup: {
         display: 'flex',
@@ -315,5 +336,21 @@ const styles = {
         borderRadius: '5px',
     },
 };
+
+const customScrollbarStyles = `
+    ::-webkit-scrollbar {
+        width: 8px; /* Width of the scrollbar */
+    }
+    ::-webkit-scrollbar-track {
+        background: #1c1c1c; /* Background of the scrollbar track */
+    }
+    ::-webkit-scrollbar-thumb {
+        background-color: #555; /* Color of the scrollbar handle */
+        border-radius: 10px; /* Rounded edges for the scrollbar handle */
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background-color: #777; /* Color of the scrollbar handle on hover */
+    }
+`;
 
 export default AddModuleModal;

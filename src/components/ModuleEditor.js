@@ -132,7 +132,7 @@ const ModuleEditor = () => {
     };
 
     return (
-        <div className='content'>
+        <div className='editor-content'>
             <div className="toolbox-list">
                 <h2>Toolbox</h2>
                 <ul>
