@@ -107,11 +107,13 @@ const createModule = async (moduleName, algorithmType, moduleCategory, filesCont
 
     await updateStructureJson(algorithmType, moduleCategory, moduleName);
 
+    await updateModuleConfig(moduleCategory, moduleName)
+
 };
 
-const getStructure = async () => {
+const getStructure = async (fileName) => {
     // Step 1: Get the current contents of the file
-    const response = await axios.get(`${GITHUB_API_BASE_URL}/repos/${OWNER}/${REPO}/contents/structure.json?ref=${branchS}`, {
+    const response = await axios.get(`${GITHUB_API_BASE_URL}/repos/${OWNER}/${REPO}/contents/${fileName}?ref=${branchS}`, {
         headers: {
             Authorization: `token ${TOKEN}`,
         },
@@ -127,7 +129,7 @@ const getStructure = async () => {
 const updateStructureJson = async (algorithmType, moduleCategory, moduleName) => {
     try {
 
-        const { structure, sha } = await getStructure();
+        const { structure, sha } = await getStructure('structure.json');
 
         // Step 2: Update the structure as needed
         if (!structure[algorithmType]) {
@@ -164,7 +166,47 @@ const updateStructureJson = async (algorithmType, moduleCategory, moduleName) =>
     }
 };
 
+const updateModuleConfig = async (moduleCategory, moduleName) => {
+    try {
+        const { structure, sha } = await getStructure('moduleConfig.json');
 
+        // Step 2: Determine the last port based on existing keys
+        const keys = Object.keys(structure);
+        const lastPort = keys.length > 0 ? parseInt(keys.length) + 5000 : 5000;
+
+        // Create the new entry
+        const newEntry = {
+            [moduleCategory]: `http://127.0.0.1:${lastPort}/${moduleName.toLowerCase()}`
+        };
+
+
+        // Update the current config with the new entry
+        const updatedConfig = { ...structure, ...newEntry };
+
+        // Step 3: Create a new commit to update the file
+        const updatedContent = btoa(JSON.stringify(updatedConfig, null, 4));
+
+        await axios.put(`${GITHUB_API_BASE_URL}/repos/${OWNER}/${REPO}/contents/moduleConfig.json?ref=${branchS}`, {
+            message: 'Update moduleConfig.json',
+            content: updatedContent,
+            sha: sha, // Include the SHA to update the existing file
+            branch: branchS
+        }, {
+            headers: {
+                Authorization: `token ${TOKEN}`,
+            },
+        });
+
+        console.log('Module config updated')
+
+        return { success: true, message: 'File updated successfully' };
+    } catch (error) {
+        console.error('Error updating file:', error.response?.data || error.message);
+        return { success: false, message: 'Failed to update file on GitHub' };
+    }
+
+
+};
 
 
 

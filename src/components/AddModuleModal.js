@@ -108,6 +108,32 @@ const AddModuleModal = ({ isOpen, onRequestClose, onModuleCreated }) => {
         }
     };
 
+    // Generate the required route string for the Python file
+    const requiredRoute = `@app.route('/${moduleName}', methods=['POST'])`;
+
+    // Prefill the pythonCode with the required route when moving to step 2
+    useEffect(() => {
+        if (step === 2 && moduleName) {
+            setPythonCode(requiredRoute); // Prefill the textarea with the required route
+        }
+    }, [step, moduleName]);
+
+    // Validate Python code for required route string
+    const validatePythonCode = () => {
+        if (!pythonCode.includes(requiredRoute)) {
+            alert(`The Python code must include: \n${requiredRoute}`);
+            return false;
+        }
+        return true;
+    };
+
+    const handleNextWithValidation = () => {
+        if (step === 2 && !validatePythonCode()) {
+            return; // Prevent moving to the next step if validation fails
+        }
+        handleNext(); // Move to the next step
+    };
+
     return (
         <Modal
             isOpen={isOpen}
@@ -158,7 +184,7 @@ const AddModuleModal = ({ isOpen, onRequestClose, onModuleCreated }) => {
                         />
                         <div style={styles.buttonGroup}>
                             <button type="button" onClick={handlePrevious} style={styles.previousButton}>Previous</button>
-                            <button type="button" onClick={handleNext} style={styles.nextButton}>Next</button>
+                            <button type="button" onClick={handleNextWithValidation} style={styles.nextButton}>Next</button>
                         </div>
                     </div>
                 )}

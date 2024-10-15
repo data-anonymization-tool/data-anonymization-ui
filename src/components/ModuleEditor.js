@@ -22,7 +22,7 @@ const ModuleEditor = () => {
 
     useEffect(() => {
         const fetchStructure = async () => {
-            const { structure, sha } = await getStructure();
+            const { structure, sha } = await getStructure('structure.json');
             setStructure(structure); // Save structure to state
         };
 
@@ -61,7 +61,6 @@ const ModuleEditor = () => {
         const fetchModules = async () => {
             try {
                 const modulesData = await getModulesList();
-                console.log(modulesData);
                 // Filter out the unwanted items based on the name property
                 const filteredModules = modulesData.filter(module =>
                     module.name !== '.github' &&
@@ -80,6 +79,17 @@ const ModuleEditor = () => {
 
     const handleModuleClick = async (module) => {
         try {
+            const mapping = {
+                "Laplace Mechanism": "dp-laplace",
+                "Exponential Mechanism": "dp-exponential",
+                "Gaussian Mechanism": "dp-gaussian",
+                "Differentially Private Queries using Laplace": "dp-queries-lp",
+                "Differentially Private Queries using Exponential": "dp-queries-ep",
+                "CTGAN Synthesis": "ctgan-synthesis",
+                "Gaussian Copula": "gaussian-copula",
+                "TVAE Synthesis": "tvae-synthesis",
+            }
+            module = mapping[module];
             const codeData = await getModuleCode(module);
             setCode(codeData);
             setSelectedModule(module);

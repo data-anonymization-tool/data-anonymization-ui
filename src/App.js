@@ -4,7 +4,6 @@ import './App.css';
 import './ModuleConfiguration.css';
 import Navbar from './NavBar';
 import SaveModal from './SaveModal';
-import { moduleConfig } from './moduleConfig';
 import ModuleEditor from './components/ModuleEditor';
 import { getStructure } from './components/services/githubService';
 
@@ -13,14 +12,32 @@ const App = () => {
   const [expandedIndexes, setExpandedIndexes] = useState([]);
   const [selectedView, setSelectedView] = useState('build');
   const [structure, setStructure] = useState(null);
+  const [moduleConfig, setModuleConfig] = useState(null);
 
   useEffect(() => {
     const fetchStructure = async () => {
-      const { structure, sha } = await getStructure();
+      const { structure, sha } = await getStructure('structure.json');
       setStructure(structure); // Save structure to state
     };
 
     fetchStructure(); // Call the async function
+  }, []);
+
+  useEffect(() => {
+    const fetchModuleConfig = async () => {
+      try {
+        const { structure, sha } = await getStructure('moduleConfig.json');
+        if (structure) {
+          setModuleConfig(structure); // Save ModuleConfig to state
+        } else {
+          console.error('Failed to fetch moduleConfig structure:', structure);
+        }
+      } catch (error) {
+        console.error('Error fetching moduleConfig:', error);
+      }
+    };
+
+    fetchModuleConfig(); // Call the async function
   }, []);
 
   // Extract the algorithm types (top-level keys)
@@ -123,7 +140,7 @@ const App = () => {
                 Configuration {selectedModule ? ` for ${selectedModule}` : ''}
               </h2>
               {selectedModule ? (
-                <ModuleConfiguration module={selectedModule} structure={structure} />
+                <ModuleConfiguration module={selectedModule} structure={structure} moduleConfig={moduleConfig} />
               ) : (
                 <p>Select a module to configure.</p>
               )}
@@ -132,7 +149,7 @@ const App = () => {
             <div className={`module-metadata ${selectedModule ? '' : 'disabled'}`}>
               <h2>Module Metadata</h2>
               {selectedModule ? (
-                <ModuleMetadata module={selectedModule} />
+                <ModuleMetadata module={selectedModule} moduleConfig={moduleConfig} />
               ) : (
                 <p>Select a module to see its metadata.</p>
               )}
@@ -224,75 +241,7 @@ const useStructureData = (structure) => {
   return { parameterLabels, queryOptions };
 };
 
-
-// const parameterLabels = {
-//   'l-diversity': {
-//     param1: { label: 'Column to be anonymized', optional: false },
-//     param2: { label: 'Direct Identifier Columns', optional: false },
-//     param3: { label: 'l', optional: false },
-//     param4: { label: 'k', optional: false },
-//   },
-//   'k-anonymity': {
-//     param1: { label: 'Column to be anonymized', optional: false },
-//     param2: { label: 'Direct Identifier Columns', optional: false },
-//     param3: { label: 'k', optional: false },
-//   },
-//   't-closeness': {
-//     param1: { label: 'Column to be anonymized', optional: false },
-//     param2: { label: 'Direct Identifier Columns', optional: false },
-//     param3: { label: 't', optional: false },
-//     param4: { label: 'k', optional: false },
-//   },
-//   'Laplace Mechanism': {
-//     param1: { label: 'Column to be anonymized', optional: false },
-//     param2: { label: 'Direct Identifier Columns', optional: false },
-//     param3: { label: 'Sensitivity', optional: false },
-//     param4: { label: 'Epsilon', optional: false }
-//   },
-//   'Exponential Mechanism': {
-//     param1: { label: 'Column to be anonymized', optional: false },
-//     param2: { label: 'Direct Identifier Columns', optional: false },
-//     param3: { label: 'Sensitivity', optional: false },
-//     param4: { label: 'Epsilon', optional: false }
-//   },
-//   'Gaussian Mechanism': {
-//     param1: { label: 'Column to be anonymized', optional: false },
-//     param2: { label: 'Direct Identifier Columns', optional: false },
-//     param3: { label: 'Sensitivity', optional: false },
-//     param4: { label: 'Epsilon', optional: false },
-//     param5: { label: 'Delta', optional: false }
-//   },
-//   'Differentially Private Queries using Laplace': {
-//     param1: { label: 'Column to be anonymized', optional: false },
-//     param2: { label: 'Condition Value', optional: false },
-//     param3: { label: 'Epsilon', optional: false }
-//   },
-//   'Differentially Private Queries using Exponential': {
-//     param1: { label: 'Column to be anonymized', optional: false },
-//     param2: { label: 'Epsilon', optional: false },
-//     param3: { label: 'k', optional: true }, // Optional
-//     param4: { label: 'Column 2', optional: true } // Optional
-//   },
-//   'CTGAN Synthesis': {
-//     param1: { label: 'Columns to be anonymized', optional: false },
-//     param2: { label: 'Direct Identifier Columns', optional: false }
-//   },
-//   'Gaussian Copula': {
-//     param1: { label: 'Columns to be anonymized', optional: false },
-//     param2: { label: 'Direct Identifier Columns', optional: false }
-//   },
-//   'TVAE Synthesis': {
-//     param1: { label: 'Columns to be anonymized', optional: false },
-//     param2: { label: 'Direct Identifier Columns', optional: false }
-//   }
-// };
-
-// const queryOptions = {
-//   'Differentially Private Queries using Laplace': ['sum', 'count', 'mean', 'median', 'mode', 'variance', 'std_dev', 'All Queries'],
-//   'Differentially Private Queries using Exponential': ['frequency', 'mode', 'entropy', 'contingency', 'top-k', 'All Queries'],
-// };
-
-const ModuleConfiguration = ({ module, structure }) => {
+const ModuleConfiguration = ({ module, structure, moduleConfig }) => {
   const [files, setFiles] = useState({});
   const [selectedQueryType, setSelectedQueryType] = useState('');
   const [error, setError] = useState(null);
@@ -323,9 +272,6 @@ const ModuleConfiguration = ({ module, structure }) => {
   }
 
   removeQueryOptions(parameterLabels);
-
-  console.log('parameterLabels:', parameterLabels);
-  console.log('queryOptions:', queryOptions);
 
   // Effect to reset form on module change
   useEffect(() => {
@@ -641,7 +587,7 @@ const ModuleConfiguration = ({ module, structure }) => {
   );
 };
 
-const ModuleMetadata = ({ module }) => {
+const ModuleMetadata = ({ module, moduleConfig }) => {
   const [metadata, setMetadata] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
