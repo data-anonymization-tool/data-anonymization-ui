@@ -8,12 +8,12 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --silent
 
+ARG REACT_APP_GITHUB_TOKEN
+ENV REACT_APP_GITHUB_TOKEN=$REACT_APP_GITHUB_TOKEN
+
 # Copy rest of the application files and build
 COPY . .
 RUN npm run build
-
-ARG REACT_APP_GITHUB_TOKEN
-ENV REACT_APP_GITHUB_TOKEN=$REACT_APP_GITHUB_TOKEN
 
 # Stage 2: Serve app with NGINX
 FROM nginx:alpine
