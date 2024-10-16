@@ -13,6 +13,19 @@ const AddModuleModal = ({ isOpen, onRequestClose, onModuleCreated }) => {
     const [algorithmType, setAlgorithmType] = useState('');
     const [moduleCategory, setModuleCategory] = useState('');
 
+    const initialParameters = {
+        param1: {
+            label: "Columns to be anonymized",
+            optional: false
+        },
+        param2: {
+            label: "Direct Identifier Columns",
+            optional: false
+        }
+    };
+
+    const [inputParameters, setInputParameters] = useState(JSON.stringify(initialParameters, null, 2));
+
     const [step, setStep] = useState(1);
 
     // Update JSON content dynamically when moduleName changes
@@ -59,8 +72,32 @@ const AddModuleModal = ({ isOpen, onRequestClose, onModuleCreated }) => {
         }
     }, [moduleName]);
 
+    // useEffect(() => {
+    //     if (moduleName.trim()) {
+    //         setInputParameters(
+    //             JSON.stringify(
+    //                 {
+    //                     [moduleName]: {
+    //                         "param1": {
+    //                             label: "Columns to be anonymized",
+    //                             optional: false
+    //                         },
+    //                         "param2": {
+    //                             label: "Direct Identifier Columns",
+    //                             optional: false
+    //                         }
+    //                     }
+    //                 },
+    //                 null, 4 // Indentation for better readability
+    //             )
+    //         );
+    //     } else {
+    //         setInputParameters(''); // Reset if no module name is entered
+    //     }
+    // }, [moduleName]);
+
     const handleNext = () => {
-        if (step < 5) {
+        if (step < 6) {
             setStep(step + 1);
         }
     };
@@ -80,7 +117,7 @@ const AddModuleModal = ({ isOpen, onRequestClose, onModuleCreated }) => {
 
         try {
             // Call the createModule function from the githubService.js
-            await createModule(moduleName, algorithmType, moduleCategory, {
+            await createModule(moduleName, algorithmType, moduleCategory, inputParameters, {
                 [`${moduleName}.py`]: pythonCode,
                 [`${moduleName}.json`]: jsonContent,
                 'Dockerfile': dockerfileContent,
@@ -111,12 +148,30 @@ const AddModuleModal = ({ isOpen, onRequestClose, onModuleCreated }) => {
     // Generate the required route string for the Python file
     const requiredRoute = `@app.route('/${moduleName}', methods=['POST'])`;
 
-    // Prefill the pythonCode with the required route when moving to step 2
+    // Function to create the additional code block with dynamic module name
+    const createAdditionalCode = (moduleName) => {
+        return `
+def anonymize():
+# Add your anonymization logic here
+
+@app.route('/${moduleName}/metadata', methods=['GET']) 
+def get_metadata():
+    return send_file('${moduleName}.json', as_attachment=False)
+
+if __name__ == '__main__':
+    app.run(debug=True)
+        `;
+    };
+
+    // Prefill the pythonCode with the required route and additional code when moving to step 2
     useEffect(() => {
         if (step === 2 && moduleName) {
-            setPythonCode(requiredRoute); // Prefill the textarea with the required route
+            // Combine the required route and additional code
+            const additionalCode = createAdditionalCode(moduleName);
+            setPythonCode(`${requiredRoute}\n${additionalCode}`); // Prefill the textarea with the complete code
         }
     }, [step, moduleName]);
+
 
     // Validate Python code for required route string
     const validatePythonCode = () => {
@@ -193,6 +248,22 @@ const AddModuleModal = ({ isOpen, onRequestClose, onModuleCreated }) => {
 
                 {step === 3 && (
                     <div style={styles.formGroup}>
+                        Please enter the input parameters of your anonymization module API. There is prefilled text as an example, you may add/update below text.
+                        <textarea
+                            value={inputParameters}
+                            onChange={(e) => setInputParameters(e.target.value)}
+                            required
+                            style={styles.textarea}
+                        />
+                        <div style={styles.buttonGroup}>
+                            <button type="button" onClick={handlePrevious} style={styles.previousButton}>Previous</button>
+                            <button type="button" onClick={handleNextWithValidation} style={styles.nextButton}>Next</button>
+                        </div>
+                    </div>
+                )}
+
+                {step === 4 && (
+                    <div style={styles.formGroup}>
                         Please fill in the metadata information explaining the following details regarding your anonymization module inside the double quotes provided.
                         <label>{moduleName ? `${moduleName}.json` : 'module-name.json'}:</label>
                         <textarea
@@ -208,7 +279,7 @@ const AddModuleModal = ({ isOpen, onRequestClose, onModuleCreated }) => {
                     </div>
                 )}
 
-                {step === 4 && (
+                {step === 5 && (
                     <div style={styles.formGroup}>
                         Provide the contents of the Dockerfile for your module. This file is essential for containerizing your application. Ensure that it is correctly set up to run your module properly.
                         <label>Dockerfile:</label>
@@ -225,7 +296,7 @@ const AddModuleModal = ({ isOpen, onRequestClose, onModuleCreated }) => {
                     </div>
                 )}
 
-                {step === 5 && (
+                {step === 6 && (
                     <div style={styles.formGroup}>
                         Enter the Python dependencies for your module in the requirements.txt format. This list is crucial for the installation of necessary packages when deploying the module.
                         <label>requirements.txt:</label>
@@ -257,15 +328,15 @@ const customStyles = {
         width: '500px',
         height: '500px',
         backgroundColor: '#2c2c2c',
-        zIndex:'1001',
-        overflowY: 'auto', 
+        zIndex: '1001',
+        overflowY: 'auto',
         scrollbarWidth: 'thin', // For Firefox: make scrollbar thin
         scrollbarColor: '#555 #1c1c1c', // For Firefox: scrollbar color
     },
     overlay: {
         backgroundColor: 'rgba(0, 0, 0, 0.5)',  // Dark overlay
-        zIndex:'1000',
-      }
+        zIndex: '1000',
+    }
 };
 
 const styles = {

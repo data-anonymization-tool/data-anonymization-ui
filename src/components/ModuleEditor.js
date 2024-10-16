@@ -117,9 +117,9 @@ const ModuleEditor = () => {
     const openModal = () => setIsModalOpen(true);
     const closeModal = () => setIsModalOpen(false);
 
-    const handleCreateModule = async ({ moduleName, algorithmType, moduleCategory, filesContent }) => {
+    const handleCreateModule = async ({ moduleName, algorithmType, moduleCategory, inputParameters, filesContent }) => {
         try {
-            await createModule(moduleName, algorithmType, moduleCategory, filesContent);
+            await createModule(moduleName, algorithmType, moduleCategory, inputParameters, filesContent);
             alert(`Module "${moduleName}" created successfully!`);
             closeModal();
             // Refresh the modules list
@@ -188,14 +188,14 @@ const ModuleEditor = () => {
                     ))}
                     <li onClick={openModal}>
                         <div className="add-module-container">
-                        <button className="add-button">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" className="plusIcon" viewBox="0 0 30 30">
-                                <g strokeWidth="1.5" strokeLinecap="round" stroke="#ffffff">
-                                    <path d="M13.75 23.75V16.25H6.25V13.75H13.75V6.25H16.25V13.75H23.75V16.25H16.25V23.75H13.75Z"></path>
-                                </g>
-                            </svg>
-                            <span className="label">Add New Module</span>
-                        </button>
+                            <button className="add-button">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" className="plusIcon" viewBox="0 0 30 30">
+                                    <g strokeWidth="1.5" strokeLinecap="round" stroke="#ffffff">
+                                        <path d="M13.75 23.75V16.25H6.25V13.75H13.75V6.25H16.25V13.75H23.75V16.25H16.25V23.75H13.75Z"></path>
+                                    </g>
+                                </svg>
+                                <span className="label">Add New Module</span>
+                            </button>
                         </div>
                     </li>
 
@@ -226,12 +226,12 @@ const ModuleEditor = () => {
                             }}
                         />
                         <button class="button" onClick={handleSaveChanges}>
-                        <svg viewBox="0 0 384 512" height="1em" xmlns="http://www.w3.org/2000/svg">
-                        <g strokeWidth="1.5" stroke="white" fill="white">
-                        <path d="M0 48C0 21.5 21.5 0 48 0l0 48V441.4l130.1-92.9c8.3-6 19.6-6 27.9 0L336 441.4V48H48V0H336c26.5 0 48 21.5 48 48V488c0 9-5 17.2-13 21.3s-17.6 3.4-24.9-1.8L192 397.5 37.9 507.5c-7.3 5.2-16.9 5.9-24.9 1.8S0 497 0 488V48z"></path>
-                        </g>
-                        </svg>
-                        <span>Save Changes</span>
+                            <svg viewBox="0 0 384 512" height="1em" xmlns="http://www.w3.org/2000/svg">
+                                <g strokeWidth="1.5" stroke="white" fill="white">
+                                    <path d="M0 48C0 21.5 21.5 0 48 0l0 48V441.4l130.1-92.9c8.3-6 19.6-6 27.9 0L336 441.4V48H48V0H336c26.5 0 48 21.5 48 48V488c0 9-5 17.2-13 21.3s-17.6 3.4-24.9-1.8L192 397.5 37.9 507.5c-7.3 5.2-16.9 5.9-24.9 1.8S0 497 0 488V48z"></path>
+                                </g>
+                            </svg>
+                            <span>Save Changes</span>
                         </button>
                     </>
                 )}

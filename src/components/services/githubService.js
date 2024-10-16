@@ -90,8 +90,6 @@ const createOrUpdateFile = async (moduleName, fileName, content) => {
             }, {
                 headers: { Authorization: `token ${TOKEN}`, 'Content-Type': 'application/json' }
             });
-
-            console.log(`Created file: ${fileName}`, response);
         } else {
             console.error(`Error with ${fileName}:`, error);
             throw error;
@@ -100,12 +98,12 @@ const createOrUpdateFile = async (moduleName, fileName, content) => {
 };
 
 // Function to create or update files in the module
-const createModule = async (moduleName, algorithmType, moduleCategory, filesContent) => {
+const createModule = async (moduleName, algorithmType, moduleCategory, inputParameters, filesContent) => {
     for (const [fileName, content] of Object.entries(filesContent)) {
         await createOrUpdateFile(moduleName, fileName, content);
     }
 
-    await updateStructureJson(algorithmType, moduleCategory, moduleName);
+    await updateStructureJson(algorithmType, moduleCategory, moduleName, inputParameters);
 
     await updateModuleConfig(moduleCategory, moduleName)
 
@@ -126,10 +124,12 @@ const getStructure = async (fileName) => {
     return { structure, sha: fileData.sha };
 }
 
-const updateStructureJson = async (algorithmType, moduleCategory, moduleName) => {
+const updateStructureJson = async (algorithmType, moduleCategory, moduleName, inputParameters) => {
     try {
 
         const { structure, sha } = await getStructure('structure.json');
+
+        console.log(structure);
 
         // Step 2: Update the structure as needed
         if (!structure[algorithmType]) {
@@ -137,15 +137,21 @@ const updateStructureJson = async (algorithmType, moduleCategory, moduleName) =>
         }
 
         if (!structure[algorithmType][moduleCategory]) {
-            structure[algorithmType][moduleCategory] = [];
+            structure[algorithmType][moduleCategory] = {};
         }
 
-        if (!structure[algorithmType][moduleCategory].includes(moduleName)) {
-            structure[algorithmType][moduleCategory].push(moduleName);
+        console.log(JSON.parse(inputParameters));
+
+        // Step 3: Map moduleName to inputParameters
+        if (!structure[algorithmType][moduleCategory][moduleName]) {
+            structure[algorithmType][moduleCategory][moduleName] = {};
         }
 
-        // Step 3: Create a new commit to update the file
+        structure[algorithmType][moduleCategory][moduleName] = JSON.parse(inputParameters);
+
+        // Step 4: Convert the updated structure to a base64 string without escape characters or newlines
         const updatedContent = btoa(JSON.stringify(structure, null, 4));
+
         await axios.put(`${GITHUB_API_BASE_URL}/repos/${OWNER}/${REPO}/contents/structure.json?ref=${branchS}`, {
             message: 'Update structure.json',
             content: updatedContent,
@@ -176,7 +182,7 @@ const updateModuleConfig = async (moduleCategory, moduleName) => {
 
         // Create the new entry
         const newEntry = {
-            [moduleCategory]: `http://127.0.0.1:${lastPort}/${moduleName.toLowerCase()}`
+            [moduleName]: `http://127.0.0.1:${lastPort}/${moduleName.toLowerCase()}`
         };
 
 
