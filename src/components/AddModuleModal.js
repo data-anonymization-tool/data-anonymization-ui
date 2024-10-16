@@ -25,7 +25,7 @@ const AddModuleModal = ({ isOpen, onRequestClose, onModuleCreated }) => {
     };
 
     const [inputParameters, setInputParameters] = useState(JSON.stringify(initialParameters, null, 2));
-
+    const [isLoading, setIsLoading] = useState(false);
     const [step, setStep] = useState(1);
 
     // Update JSON content dynamically when moduleName changes
@@ -114,7 +114,8 @@ const AddModuleModal = ({ isOpen, onRequestClose, onModuleCreated }) => {
             alert('Module name cannot be empty.');
             return;
         }
-
+        onRequestClose();
+        setIsLoading(true); // Set loading to true 
         try {
             // Call the createModule function from the githubService.js
             await createModule(moduleName, algorithmType, moduleCategory, inputParameters, {
@@ -128,7 +129,7 @@ const AddModuleModal = ({ isOpen, onRequestClose, onModuleCreated }) => {
             if (onModuleCreated) {
                 onModuleCreated();
             }
-
+            setIsLoading(false);
             alert(`Module "${moduleName}" created successfully!`);
 
             // Reset form fields
@@ -142,6 +143,8 @@ const AddModuleModal = ({ isOpen, onRequestClose, onModuleCreated }) => {
         } catch (error) {
             console.error('Error creating module:', error);
             alert('Failed to create module. Ensure the module name is unique and try again.');
+        } finally {
+            setIsLoading(false); // Set loading to false
         }
     };
 
@@ -190,6 +193,7 @@ if __name__ == '__main__':
     };
 
     return (
+        <>
         <Modal
             isOpen={isOpen}
             onRequestClose={onRequestClose}
@@ -314,6 +318,73 @@ if __name__ == '__main__':
                 )}
             </form>
         </Modal>
+        {/* Loader Section */}
+        {isLoading && (
+            <div style={styles.loader}>
+                <div className="honeycomb">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+            </div>
+        )}
+
+        {/* CSS for loader */}
+        <style>
+            {`
+                @-webkit-keyframes honeycomb {
+                    0%, 20%, 80%, 100% { opacity: 0; -webkit-transform: scale(0); transform: scale(0); }
+                    30%, 70% { opacity: 1; -webkit-transform: scale(1); transform: scale(1); }
+                }
+                @keyframes honeycomb {
+                    0%, 20%, 80%, 100% { opacity: 0; -webkit-transform: scale(0); transform: scale(0); }
+                    30%, 70% { opacity: 1; -webkit-transform: scale(1); transform: scale(1); }
+                }
+                .honeycomb {
+                    height: 24px;
+                    position: relative;
+                    width: 24px;
+                }
+                .honeycomb div {
+                    -webkit-animation: honeycomb 2.1s infinite backwards;
+                    animation: honeycomb 2.1s infinite backwards;
+                    background: #f3f3f3;
+                    height: 12px;
+                    margin-top: 6px;
+                    position: absolute;
+                    width: 24px;
+                }
+                .honeycomb div:after,
+                .honeycomb div:before {
+                    content: '';
+                    border-left: 12px solid transparent;
+                    border-right: 12px solid transparent;
+                    position: absolute;
+                    left: 0;
+                    right: 0;
+                }
+                .honeycomb div:after {
+                    top: -6px;
+                    border-bottom: 6px solid #f3f3f3;
+                }
+                .honeycomb div:before {
+                    bottom: -6px;
+                    border-top: 6px solid #f3f3f3;
+                }
+                .honeycomb div:nth-child(1) { -webkit-animation-delay: 0s; animation-delay: 0s; left: -28px; top: 0; }
+                .honeycomb div:nth-child(2) { -webkit-animation-delay: 0.1s; animation-delay: 0.1s; left: -14px; top: 22px; }
+                .honeycomb div:nth-child(3) { -webkit-animation-delay: 0.2s; animation-delay: 0.2s; left: 14px; top: 22px; }
+                .honeycomb div:nth-child(4) { -webkit-animation-delay: 0.3s; animation-delay: 0.3s; left: 28px; top: 0; }
+                .honeycomb div:nth-child(5) { -webkit-animation-delay: 0.4s; animation-delay: 0.4s; left: 14px; top: -22px; }
+                .honeycomb div:nth-child(6) { -webkit-animation-delay: 0.5s; animation-delay: 0.5s; left: -14px; top: -22px; }
+                .honeycomb div:nth-child(7) { -webkit-animation-delay: 0.6s; animation-delay: 0.6s; left: 0; top: 0; }
+            `}
+        </style>
+    </>
     );
 };
 
@@ -405,6 +476,20 @@ const styles = {
         border: 'none',
         cursor: 'pointer',
         borderRadius: '5px',
+    },
+    loader: {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh', // Make loader full screen height
+        flexDirection: 'column', // Center loader in column
+        position: 'fixed', // Fix loader position
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)', // Dark overlay behind loader
+        zIndex: 1000, // Higher z-index to appear above other elements
     },
 };
 
