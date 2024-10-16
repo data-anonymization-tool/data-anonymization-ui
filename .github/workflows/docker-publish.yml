@@ -19,10 +19,10 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GHCR_TOKEN_2 }}
 
       - name: Build and push Docker image
         run: |
-          docker build --build-arg REACT_APP_MY_SECRET=${{ secrets.MY_SECRET }} -t ghcr.io/your-repo/your-image:latest .
-          docker push ghcr.io/your-repo/your-image:latest
+          docker build --build-arg REACT_APP_GITHUB_TOKEN=${{ secrets.REACT_APP_GITHUB_TOKEN }} -t ghcr.io/data-anonymization-ui/data-anonymization-ui:latest .
+          docker push ghcr.io/data-anonymization-ui/data-anonymization-ui:latest
