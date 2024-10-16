@@ -4,9 +4,8 @@ import axios, { HttpStatusCode } from 'axios';
 const GITHUB_API_BASE_URL = 'https://api.github.com';
 const OWNER = 'data-anonymization-tool';
 const REPO = 'data-anonymization-modules';
-const BRANCH = 'ui-test'; // Or your desired branch
+const BRANCH = 'master'; // Or your desired branch
 const TOKEN = process.env.REACT_APP_GITHUB_TOKEN; // Ensure this is stored securely
-const branchS = 'master';
 
 const getModulesList = async () => {
     const response = await axios.get(`${GITHUB_API_BASE_URL}/repos/${OWNER}/${REPO}/contents/?ref=${BRANCH}`, {
@@ -111,7 +110,7 @@ const createModule = async (moduleName, algorithmType, moduleCategory, inputPara
 
 const getStructure = async (fileName) => {
     // Step 1: Get the current contents of the file
-    const response = await axios.get(`${GITHUB_API_BASE_URL}/repos/${OWNER}/${REPO}/contents/${fileName}?ref=${branchS}`, {
+    const response = await axios.get(`${GITHUB_API_BASE_URL}/repos/${OWNER}/${REPO}/contents/${fileName}?ref=${BRANCH}`, {
         headers: {
             Authorization: `token ${TOKEN}`,
         },
@@ -152,11 +151,11 @@ const updateStructureJson = async (algorithmType, moduleCategory, moduleName, in
         // Step 4: Convert the updated structure to a base64 string without escape characters or newlines
         const updatedContent = btoa(JSON.stringify(structure, null, 4));
 
-        await axios.put(`${GITHUB_API_BASE_URL}/repos/${OWNER}/${REPO}/contents/structure.json?ref=${branchS}`, {
+        await axios.put(`${GITHUB_API_BASE_URL}/repos/${OWNER}/${REPO}/contents/structure.json?ref=${BRANCH}`, {
             message: 'Update structure.json',
             content: updatedContent,
             sha: sha, // Include the SHA to update the existing file
-            branch: branchS
+            branch: BRANCH
         }, {
             headers: {
                 Authorization: `token ${TOKEN}`,
@@ -192,11 +191,11 @@ const updateModuleConfig = async (moduleCategory, moduleName) => {
         // Step 3: Create a new commit to update the file
         const updatedContent = btoa(JSON.stringify(updatedConfig, null, 4));
 
-        await axios.put(`${GITHUB_API_BASE_URL}/repos/${OWNER}/${REPO}/contents/moduleConfig.json?ref=${branchS}`, {
+        await axios.put(`${GITHUB_API_BASE_URL}/repos/${OWNER}/${REPO}/contents/moduleConfig.json?ref=${BRANCH}`, {
             message: 'Update moduleConfig.json',
             content: updatedContent,
             sha: sha, // Include the SHA to update the existing file
-            branch: branchS
+            branch: BRANCH
         }, {
             headers: {
                 Authorization: `token ${TOKEN}`,
