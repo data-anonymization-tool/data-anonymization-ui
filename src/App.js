@@ -591,6 +591,22 @@ const ModuleMetadata = ({ module, moduleConfig }) => {
   const [metadata, setMetadata] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showMore, setShowMore] = useState({}); // This will store the toggle state for each section
+
+  // Helper function to toggle the "View More" state
+  const toggleShowMore = (sectionKey) => {
+    setShowMore((prevState) => ({
+      ...prevState,
+      [sectionKey]: !prevState[sectionKey], // Toggle between showing more or less
+    }));
+  };
+
+  const truncateText = (text, limit = 80) => {
+    if (text.length > limit) {
+      return `${text.slice(0, limit)}...`;
+    }
+    return text;
+  };
 
   useEffect(() => {
     const fetchMetadata = async () => {
@@ -640,36 +656,87 @@ const ModuleMetadata = ({ module, moduleConfig }) => {
       <h3 className="metadata-title">Metadata for {module}</h3>
       {metadata ? (
         <div className="metadata-content">
-          <p className="metadata-section"><strong>Conceptual Explanation:</strong> {metadata.conceptual_Explanation}</p>
-          <p className="metadata-section"><strong>Technical Explanation:</strong> {metadata.technical_Explanation}</p>
-          <p className="metadata-section"><strong>Inputs:</strong></p>
-          {metadata.inputs && Object.entries(metadata.inputs).map(([paramName, param]) => (
-            <p key={paramName} className="metadata-section">
-              <strong>{paramName}:</strong> {param.description || 'No description available'} <br />
-              <strong>Type:</strong> {param.type || 'Unknown'}<br />
-              {param.options ? (
-                <>
-                  <strong>Options:</strong>
-                  <ul>
-                    {param.options.map(option => (
-                      <li key={option.value}>
-                        <strong>{option.value}</strong>: {option.explanation}
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              ) : null}
-            </p>
-          ))}
-          <p className="metadata-section"><strong>Application Platform:</strong> {metadata.application_Platform}</p>
-          <p className="metadata-section"><strong>Deployable Module:</strong>{metadata.deployable_Module}</p>
-          <p className="metadata-section"><strong>Incremental Updates:</strong> {metadata.incremental_Updates}</p>
-        </div>
-      ) : (
-        <p>No metadata available.</p>
-      )}
+          {/* Conceptual Explanation */}
+          <p className="metadata-section">
+            <strong>Conceptual Explanation:</strong>{" "}
+            {showMore.conceptual ? metadata.conceptual_Explanation : truncateText(metadata.conceptual_Explanation)}
+            {metadata.conceptual_Explanation.length > 80 && (
+              <span className="view-more-toggle" onClick={() => toggleShowMore("conceptual")}>
+                {showMore.conceptual ? "View Less" : "View More"}
+              </span>
+            )}
+          </p>
+  
+          {/* Technical Explanation */}
+          <p className="metadata-section">
+            <strong>Technical Explanation:</strong>{" "}
+            {showMore.technical ? metadata.technical_Explanation : truncateText(metadata.technical_Explanation)}
+            {metadata.technical_Explanation.length > 80 && (
+              <span className="view-more-toggle" onClick={() => toggleShowMore("technical")}>
+                {showMore.technical ? "View Less" : "View More"}
+              </span>
+            )}
+          </p>
+
+          <p className="metadata-section">
+          <strong>Inputs:</strong>
+          {metadata.inputs && (
+            <ul className="metadata-inputs-list">
+              {Object.entries(metadata.inputs).map(([paramName, param]) => (
+                <li key={paramName} className="metadata-inputs-item">
+                  <strong>{paramName}:</strong> {param.description || 'No description available'}<br />
+                  <strong>Type:</strong> {param.type || 'Unknown'}<br />
+                  {param.options && (
+                    <>
+                      <strong>Options:</strong>
+                      <ul>
+                        {param.options.map(option => (
+                          <li key={option.value}>
+                            <strong>{option.value}</strong>: {option.explanation}
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          </p> 
+
+          <p className="metadata-section">
+          <strong>Application Platform:</strong>{" "}
+          {showMore.application_Platform ? metadata.application_Platform : truncateText(metadata.application_Platform)}
+          {metadata.application_Platform.length > 80 && (
+            <span className="view-more-toggle" onClick={() => toggleShowMore("application_Platform")}>
+              {showMore.application_Platform ? "View Less" : "View More"}
+            </span>
+          )}
+        </p>
+        <p className="metadata-section">
+          <strong>Deployable Module:</strong>{" "}
+          {showMore.deployable_Module ? metadata.deployable_Module : truncateText(metadata.deployable_Module)}
+          {metadata.deployable_Module.length > 80 && (
+            <span className="view-more-toggle" onClick={() => toggleShowMore("deployable_Module")}>
+              {showMore.deployable_Module ? "View Less" : "View More"}
+            </span>
+          )}
+        </p>
+        <p className="metadata-section">
+          <strong>Incremental Updates:</strong>{" "}
+          {showMore.incremental_Updates ? metadata.incremental_Updates : truncateText(metadata.incremental_Updates)}
+          {metadata.incremental_Updates.length > 80 && (
+            <span className="view-more-toggle" onClick={() => toggleShowMore("incremental_Updates")}>
+              {showMore.incremental_Updates ? "View Less" : "View More"}
+            </span>
+          )}
+        </p>
+      </div>
+    ) : (
+      <p>No metadata available.</p>
+    )}
     </div>
-  );
+  );  
 };
 
 export default App;

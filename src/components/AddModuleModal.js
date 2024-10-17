@@ -205,15 +205,7 @@ if __name__ == '__main__':
                 {step === 1 && (
                     <div style={styles.formGroup}>
                         Enter the name of the module you want to create, select the algorithm type and specify the module category. Ensure that all fields are filled out before proceeding to the next step.
-                        <label>Module Name:</label>
-                        <input
-                            type="text"
-                            value={moduleName}
-                            onChange={(e) => setModuleName(e.target.value)}
-                            required
-                            style={styles.input}
-                        />
-                        <label>Algorithm Type:</label>
+                        <label>Module Category:</label>
                         <input
                             type="text"
                             value={algorithmType}
@@ -221,11 +213,19 @@ if __name__ == '__main__':
                             required
                             style={styles.input}
                         />
-                        <label>Module Category:</label>
+                        <label>Module Technique:</label>
                         <input
                             type="text"
                             value={moduleCategory}
                             onChange={(e) => setModuleCategory(e.target.value)}
+                            required
+                            style={styles.input}
+                        />
+                        <label>Module Name (Implementation):</label>
+                        <input
+                            type="text"
+                            value={moduleName}
+                            onChange={(e) => setModuleName(e.target.value)}
                             required
                             style={styles.input}
                         />

@@ -208,7 +208,33 @@ button {
   overflow-y: auto;
 }
 
-/* Shared Label and Form Elements */
+.view-more-toggle {
+  color:  #009fd4;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.metadata-inputs-list {
+  list-style-type: disc; /* Bulleted list */
+  padding-left: 20px; /* Add padding for indentation */
+  color: white; /* Set text color to white */
+}
+
+.metadata-inputs-item {
+  margin-bottom: 10px; /* Add some space between each list item */
+  color: white; /* White color for the inputs text */
+}
+
+.metadata-inputs-item strong {
+  color: #ffffff; /* Ensures the bolded labels are also white */
+}
+
+.metadata-inputs-item ul {
+  list-style-type: circle; /* Sub-options use a circle bullet */
+  padding-left: 20px;
+  color: white; /* Ensure options are white */
+}
+
 form {
   display: flex;
   flex-direction: column;
