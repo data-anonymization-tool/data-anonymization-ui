@@ -17,7 +17,7 @@ const App = () => {
   useEffect(() => {
     const fetchStructure = async () => {
       const { structure, sha } = await getStructure('structure.json');
-      console.log("Token from .env:", process.env.REACT_APP_GITHUB_TOKEN); //check if token is correct
+      console.log("Token from .env:", process.env.REACT_APP_GITHUB_TOKEN); //check token
       setStructure(structure); // Save structure to state
     };
 
